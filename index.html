@@ -1,0 +1,254 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FN | Fullstate Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header .nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        .header .nav a:hover {
+            color: #facc15;
+        }
+        .header .search {
+            display: flex;
+            align-items: center;
+        }
+        .header .search input {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 20px 0 0 20px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        .header .search button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #facc15;
+            color: #1e3a8a;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .header .search button:hover {
+            background: #eab308;
+        }
+        .hero {
+            background: url('https://via.placeholder.com/1920x600') no-repeat center/cover;
+            color: white;
+            text-align: center;
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .hero > * {
+            position: relative;
+            z-index: 2;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        .hero .buttons button {
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hero .buttons .report-btn {
+            background: #ef4444;
+            color: white;
+        }
+        .hero .buttons .check-btn {
+            background: #3b82f6;
+            color: white;
+        }
+        .hero .buttons button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .services {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        .services h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+        .services .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .services .card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .services .card:hover {
+            transform: translateY(-5px);
+        }
+        .services .card img {
+            width: 60px;
+            margin-bottom: 1rem;
+        }
+        .services .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #1e3a8a;
+        }
+        .services .card p {
+            font-size: 1rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">FN | Fullstate Network</div>
+        <div class="nav">
+            <a href="#">Beranda</a>
+            <a href="#">Profil</a>
+            <a href="#">Berita</a>
+            <a href="#">Layanan</a>
+            <a href="#">Kontak</a>
+        </div>
+        <div class="search">
+            <input type="text" placeholder="Cari Berita...">
+            <button>🔍</button>
+        </div>
+    </div>
+    <div class="hero">
+        <h1>MEMBERITAKAN DENGAN BERANI</h1>
+        <p>Fullstate Network adalah platform terpercaya yang menyiarkan berita di Fullstate, memberikan informasi terkini setiap hari.</p>
+        <div class="buttons">
+            <button class="report-btn">Berita Populer</button>
+            <button class="check-btn">Cek Berita Terbaru</button>
+        </div>
+    </div>
+    <div class="services">
+        <h2>LAYANAN BERITA</h2>
+        <div class="grid">
+            <div class="card">
+                <img src="https://via.placeholder.com/60" alt="Icon">
+                <h3>BERITA HARIAN</h3>
+                <p>Akses berita terbaru setiap hari dengan cepat dan mudah.</p>
+            </div>
+            <div class="card">
+                <img src="https://via.placeholder.com/60" alt="Icon">
+                <h3>LIVE UPDATE</h3>
+                <p>Dapatkan pembaruan berita langsung dengan proses yang efisien.</p>
+            </div>
+            <div class="card">
+                <img src="https://via.placeholder.com/60" alt="Icon">
+                <h3>ARSIP BERITA</h3>
+                <p>Akses arsip berita melalui platform digital kami.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
