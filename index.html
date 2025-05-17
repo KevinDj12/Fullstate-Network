@@ -290,6 +290,7 @@
             max-width: 800px;
             margin: 0 auto;
             position: relative;
+            min-height: calc(100vh - 200px); /* Memastikan konten cukup tinggi */
         }
         .news-detail .button-group {
             display: flex;
@@ -497,6 +498,7 @@
             padding: 2rem;
             text-align: left;
             flex-shrink: 0;
+            width: 100%;
         }
         .footer .footer-content {
             display: flex;
@@ -857,7 +859,7 @@
                 title: title,
                 content: content,
                 dateTime: dateTime,
-                image: URL.createObjectURL(file) // Simpan URL sementara untuk preview
+                image: URL.createObjectURL(file)
             };
 
             newsData.push(newsItem);
