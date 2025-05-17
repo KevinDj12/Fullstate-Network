@@ -689,25 +689,26 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 
     <script>
-        // Konfigurasi Firebase (Ganti dengan konfigurasi Anda dari Firebase Console)
+        // Konfigurasi Firebase
         const firebaseConfig = {
-          apiKey: "AIzaSyCNuLH9W-LqSkyLgZyqGzzXi_q50pb7bXQ",
-          authDomain: "fullstate-network.firebaseapp.com",
-          projectId: "fullstate-network",
-          storageBucket: "fullstate-network.firebasestorage.app",
-          messagingSenderId: "538971846872",
-          appId: "1:538971846872:web:4c7f49386e5325f8eebfad",
-          measurementId: "G-4SG58WYT4G"
+            apiKey: "AIzaSyCNuLH9W-LqSkyLgZyqGzzXi_q50pb7bXQ",
+            authDomain: "fullstate-network.firebaseapp.com",
+            projectId: "fullstate-network",
+            storageBucket: "fullstate-network.firebasestorage.app",
+            messagingSenderId: "538971846872",
+            appId: "1:538971846872:web:4c7f49386e5325f8eebfad",
+            measurementId: "G-4SG58WYT4G"
         };
 
         // Inisialisasi Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let isLoggedIn = false;
+        let isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
         let newsData = [];
 
         function showPage(pageId) {
+            console.log(`Showing page: ${pageId}, isLoggedIn: ${isLoggedIn}`);
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -746,10 +747,17 @@
                 };
             }
             if (isLoggedIn && pageId === 'admin') {
-                document.querySelector('#admin .add-news').classList.add('active');
+                const addNewsSection = document.querySelector('#admin .add-news');
+                if (addNewsSection) {
+                    addNewsSection.classList.add('active');
+                    console.log('Admin panel should now be visible.');
+                } else {
+                    console.error('Add news section not found in admin panel.');
+                }
                 loadAdminNewsList();
-            } else {
-                document.querySelectorAll('.add-news').forEach(el => el.classList.remove('active'));
+            } else if (pageId === 'admin' && !isLoggedIn) {
+                alert('Silakan login sebagai admin untuk mengakses panel ini.');
+                showPage('home');
             }
             if (pageId === 'news-list') {
                 loadNews();
@@ -776,7 +784,9 @@
             if (username === 'FULLSTATENETWORK' && password === 'FULLSTATENETWORKJAYASELAMANYA') {
                 alert('Login berhasil! Selamat datang, Admin!');
                 isLoggedIn = true;
+                sessionStorage.setItem('isLoggedIn', 'true');
                 closeLoginModal();
+                updateNavigation();
                 showPage('admin');
                 updateDeleteButtonsVisibility();
             } else {
@@ -818,14 +828,12 @@
                 return;
             }
 
-            // Validasi URL gambar (opsional, untuk memastikan format Imgbox)
             if (!imageUrl.includes('imgbox.com')) {
                 alert('Harap masukkan Direct Link dari Imgbox (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg)');
                 return;
             }
 
             try {
-                // Simpan data berita ke Firestore
                 const dateTime = formatDateTime();
                 const newNews = {
                     category: category,
@@ -839,10 +847,8 @@
                 const docRef = await db.collection('news').add(newNews);
                 const newNewsId = docRef.id;
 
-                // Tambahkan ID ke dokumen untuk referensi
                 await docRef.update({ id: newNewsId });
 
-                // Buat elemen berita baru di halaman
                 const newsItems = document.getElementById('news-items');
                 if (newsItems) {
                     const newNewsItem = document.createElement('div');
@@ -894,9 +900,8 @@
         async function loadNews() {
             try {
                 const newsItems = document.getElementById('news-items');
-                newsItems.innerHTML = ''; // Kosongkan daftar berita
+                newsItems.innerHTML = '';
 
-                // Ambil data dari Firestore
                 const snapshot = await db.collection('news')
                     .orderBy('createdAt', 'desc')
                     .get();
@@ -969,7 +974,7 @@
                         </div>
                         <button onclick="deleteNews('${news.id}')">Hapus Berita</button>
                     `;
-                    adminNewsList.appendChild(newsItem);
+                    adminNewsList.appendChild(newNewsItem);
                 });
             } catch (error) {
                 console.error('Error loading admin news list:', error);
@@ -979,10 +984,8 @@
         async function deleteNews(newsId) {
             if (confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
                 try {
-                    // Hapus dari Firestore
                     await db.collection('news').doc(newsId).delete();
 
-                    // Hapus elemen dari DOM
                     const newsItem = document.querySelector(`#news-items .news-item[onclick="showPage('${newsId}')"]`);
                     if (newsItem) newsItem.remove();
                     const newsPage = document.getElementById(newsId);
@@ -1012,17 +1015,19 @@
 
         function updateNavigation() {
             const nav = document.getElementById('nav-links');
+            const existingAdminLink = nav.querySelector('a[onclick="showPage(\'admin\')"]');
             if (isLoggedIn) {
-                if (!nav.querySelector('a[onclick="showPage(\'admin\')"]')) {
+                if (!existingAdminLink) {
                     const adminLink = document.createElement('a');
                     adminLink.textContent = 'Admin';
                     adminLink.setAttribute('onclick', "showPage('admin')");
                     nav.appendChild(adminLink);
+                    console.log('Admin link added to navigation.');
                 }
             } else {
-                const adminLink = nav.querySelector('a[onclick="showPage(\'admin\')"]');
-                if (adminLink) {
-                    nav.removeChild(adminLink);
+                if (existingAdminLink) {
+                    nav.removeChild(existingAdminLink);
+                    console.log('Admin link removed from navigation.');
                 }
             }
         }
@@ -1035,8 +1040,12 @@
                 console.error('Form with ID "add-news-form" not found.');
             }
             loadNews();
-            showPage('home');
             updateNavigation();
+            if (isLoggedIn) {
+                showPage('admin');
+            } else {
+                showPage('home');
+            }
         });
     </script>
 </body>
