@@ -236,12 +236,11 @@
             transform: translateY(-3px);
         }
         .news-item img {
-            width: 24px;
-            height: 24px;
+            width: 60px;
+            height: 60px;
             object-fit: cover;
-            border-radius: 5px;
-            margin-right: 0.5rem;
-            margin-top: 0.2rem;
+            border-radius: 50%;
+            margin-right: 1rem;
         }
         .news-item .info {
             text-align: left;
@@ -462,6 +461,15 @@
             margin: 0 auto;
             color: #666;
         }
+        .profile .profile-highlight {
+            display: block;
+            max-width: 800px;
+            margin: 2rem auto 0 auto;
+        }
+        .profile .profile-highlight .news-item {
+            cursor: default; /* Menghapus kursor pointer */
+            pointer-events: none; /* Menonaktifkan klik */
+        }
         #login-modal {
             display: none;
             position: fixed;
@@ -601,8 +609,8 @@
             <div class="grid">
                 <div class="card">
                     <img src="https://via.placeholder.com/60" alt="Icon">
-                    <h3>BERITA MINGGUAN</h3>
-                    <p>Akses berita terbaru setiap minggu dengan cepat dan mudah.</p>
+                    <h3>BERITA MENARIK</h3>
+                    <p>Akses berita menarik dengan cepat dan mudah.</p>
                 </div>
                 <div class="card">
                     <img src="https://via.placeholder.com/60" alt="Icon">
@@ -620,7 +628,45 @@
     <div id="profile" class="content">
         <div class="profile">
             <h2>Profil Fullstate Network</h2>
-            <p>Fullstate Network adalah penyiar berita terkemuka di Fullstate, berkomitmen untuk menyampaikan informasi yang akurat dan terpercaya. Kami telah melayani masyarakat sejak 2020, dengan tim jurnalis berpengalaman yang berdedikasi untuk mengungkap kebenaran.</p>
+            <p>Fullstate Network adalah penyiar berita terkemuka di Fullstate, berkomitmen untuk menyampaikan informasi yang akurat dan terpercaya. Kami telah melayani masyarakat sejak 2022, dengan tim jurnalis berpengalaman yang berdedikasi untuk mengungkap kebenaran.</p>
+            <div class="profile-highlight">
+                <div class="news-item">
+                    <img src="https://via.placeholder.com/60" alt="Direktur">
+                    <div class="info">
+                        <span class="category">Direktur</span>
+                        <span class="date"></span>
+                        <h3>Ven Christopher S. Ds, M. Ds</h3>
+                        <p>Direktur Fullstate Network.</p>
+                    </div>
+                </div>
+                <div class="news-item">
+                    <img src="https://via.placeholder.com/60" alt="Wakil Direktur">
+                    <div class="info">
+                        <span class="category">Wakil Direktur</span>
+                        <span class="date"></span>
+                        <h3>Ojaan</h3>
+                        <p>Wakil Direktur Fullstate Network.</p>
+                    </div>
+                </div>
+                <div class="news-item">
+                    <img src="https://via.placeholder.com/60" alt="Kepala Direksi">
+                    <div class="info">
+                        <span class="category">Kepala Direksi</span>
+                        <span class="date"></span>
+                        <h3>Bariq</h3>
+                        <p>Kepala Direksi Fullstate Network.</p>
+                    </div>
+                </div>
+                <div class="news-item">
+                    <img src="https://via.placeholder.com/60" alt="Wakil Kepala Direksi">
+                    <div class="info">
+                        <span class="category">Wakil Kepala Direksi</span>
+                        <span class="date"></span>
+                        <h3>Welly</h3>
+                        <p>Wakil Kepala Direksi Fullstate Network.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="news-list" class="content">
@@ -646,6 +692,8 @@
                         <option value="accident">Kecelakaan</option>
                         <option value="politics">Politik</option>
                         <option value="sports">Olahraga</option>
+                        <option value="art">Seni</option>
+                        <option value="information">Informasi</option>
                     </select>
                     <input type="text" id="news-title" placeholder="Judul Berita" required>
                     <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
@@ -736,6 +784,17 @@
             isLoggedIn = true;
         }
 
+        // Pemetaan kategori dari bahasa Inggris ke bahasa Indonesia
+        const categoryTranslations = {
+            'accident': 'Kecelakaan',
+            'politics': 'Politik',
+            'sports': 'Olahraga'
+        };
+
+        function getTranslatedCategory(category) {
+            return categoryTranslations[category.toLowerCase()] || category.charAt(0).toUpperCase() + category.slice(1);
+        }
+
         function showPage(pageId) {
             console.log(`Showing page: ${pageId}, isLoggedIn: ${isLoggedIn}`);
             // Sembunyikan semua konten
@@ -748,6 +807,11 @@
                 contentSection.classList.add('active');
             } else {
                 console.error(`Element with ID ${pageId} not found.`);
+                if (newsData.find(news => news.id === pageId)) {
+                    showNewsDetail(pageId);
+                } else {
+                    showPage('news-list'); // Kembali ke daftar berita jika ID tidak valid
+                }
                 return;
             }
             // Perbarui tautan navigasi aktif
@@ -801,6 +865,35 @@
             }
             updateNavigation();
             updateDeleteButtonsVisibility();
+        }
+
+        function showNewsDetail(newsId) {
+            const news = newsData.find(n => n.id === newsId);
+            if (!news) {
+                console.error(`News with ID ${newsId} not found.`);
+                showPage('news-list');
+                return;
+            }
+
+            let newsDetail = document.getElementById(newsId);
+            if (!newsDetail) {
+                newsDetail = document.createElement('div');
+                newsDetail.id = newsId;
+                newsDetail.className = 'content';
+                newsDetail.innerHTML = `
+                    <div class="news-detail">
+                        <img src="${news.image}" alt="${getTranslatedCategory(news.category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x300?text=${getTranslatedCategory(news.category)}';">
+                        <h3>${news.title}</h3>
+                        <p>${news.content}</p>
+                        <div class="button-group">
+                            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                            <button class="delete-btn" onclick="deleteNews('${news.id}')">Hapus Berita</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(newsDetail);
+            }
+            showPage(newsId);
         }
 
         function showLoginModal() {
@@ -881,15 +974,17 @@
             const category = document.getElementById('news-category')?.value;
             const title = document.getElementById('news-title')?.value;
             const content = document.getElementById('news-content')?.value;
-            const imageUrl = document.getElementById('news-image-url')?.value;
+            let imageUrl = document.getElementById('news-image-url')?.value;
 
             if (!category || !title || !content || !imageUrl) {
                 alert('Semua field harus diisi!');
                 return;
             }
 
-            if (!imageUrl.includes('imgbox.com')) {
-                alert('Harap masukkan Direct Link dari Imgbox (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg)');
+            // Validasi URL gambar lebih ketat
+            imageUrl = imageUrl.trim();
+            if (!imageUrl.includes('imgbox.com') || !/\.(jpg|jpeg|png|gif)$/i.test(imageUrl)) {
+                alert('Harap masukkan Direct Link yang valid dari Imgbox (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg). Pastikan URL berakhiran .jpg, .jpeg, .png, atau .gif.');
                 return;
             }
 
@@ -913,11 +1008,11 @@
                 if (newsItems) {
                     const newNewsItem = document.createElement('div');
                     newNewsItem.className = 'news-item';
-                    newNewsItem.onclick = () => showPage(newNewsId);
+                    newNewsItem.onclick = () => showNewsDetail(newNewsId);
                     newNewsItem.innerHTML = `
-                        <img src="${imageUrl}" alt="${category}">
+                        <img src="${imageUrl}" alt="${getTranslatedCategory(category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/24?text=${getTranslatedCategory(category)}';">
                         <div class="info">
-                            <span class="category">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                            <span class="category">${getTranslatedCategory(category)}</span>
                             <span class="date">${dateTime}</span>
                             <h3>${title}</h3>
                             <p>${content.substring(0, 50)}...</p>
@@ -925,22 +1020,6 @@
                         <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
                     `;
                     newsItems.insertBefore(newNewsItem, newsItems.firstChild);
-
-                    const newNewsPage = document.createElement('div');
-                    newNewsPage.id = newNewsId;
-                    newNewsPage.className = 'content';
-                    newNewsPage.innerHTML = `
-                        <div class="news-detail">
-                            <img src="${imageUrl}" alt="${category}">
-                            <h3>${title}</h3>
-                            <p>${content}</p>
-                            <div class="button-group">
-                                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
-                                <button class="delete-btn" onclick="deleteNews('${newNewsId}')">Hapus Berita</button>
-                            </div>
-                        </div>
-                    `;
-                    document.body.appendChild(newNewsPage);
 
                     document.getElementById('add-news-form').reset();
                     toggleAddNewsForm();
@@ -979,15 +1058,16 @@
                 newsData = [];
                 snapshot.forEach(doc => {
                     const news = doc.data();
+                    console.log('News Image URL:', news.image); // Log URL gambar untuk debugging
                     newsData.push(news);
 
                     const newNewsItem = document.createElement('div');
                     newNewsItem.className = 'news-item';
-                    newNewsItem.onclick = () => showPage(news.id);
+                    newNewsItem.onclick = () => showNewsDetail(news.id);
                     newNewsItem.innerHTML = `
-                        <img src="${news.image || `https://via.placeholder.com/24?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}`}" alt="${news.category}">
+                        <img src="${news.image}" alt="${getTranslatedCategory(news.category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/24?text=${getTranslatedCategory(news.category)}';">
                         <div class="info">
-                            <span class="category">${news.category.charAt(0).toUpperCase() + news.category.slice(1)}</span>
+                            <span class="category">${getTranslatedCategory(news.category)}</span>
                             <span class="date">${news.dateTime}</span>
                             <h3>${news.title}</h3>
                             <p>${news.content.substring(0, 50)}...</p>
@@ -996,13 +1076,14 @@
                     `;
                     newsItems.appendChild(newNewsItem);
 
-                    if (!document.getElementById(news.id)) {
-                        const newNewsPage = document.createElement('div');
-                        newNewsPage.id = news.id;
-                        newNewsPage.className = 'content';
-                        newNewsPage.innerHTML = `
+                    let newsDetail = document.getElementById(news.id);
+                    if (!newsDetail) {
+                        newsDetail = document.createElement('div');
+                        newsDetail.id = news.id;
+                        newsDetail.className = 'content';
+                        newsDetail.innerHTML = `
                             <div class="news-detail">
-                                <img src="${news.image || `https://via.placeholder.com/800x300?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}`}" alt="${news.category}">
+                                <img src="${news.image}" alt="${getTranslatedCategory(news.category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x300?text=${getTranslatedCategory(news.category)}';">
                                 <h3>${news.title}</h3>
                                 <p>${news.content}</p>
                                 <div class="button-group">
@@ -1011,7 +1092,7 @@
                                 </div>
                             </div>
                         `;
-                        document.body.appendChild(newNewsPage);
+                        document.body.appendChild(newsDetail);
                     }
                 });
                 updateDeleteButtonsVisibility();
@@ -1045,7 +1126,7 @@
                     newsItem.className = 'news-item';
                     newsItem.innerHTML = `
                         <div class="info">
-                            <span class="category">${news.category.charAt(0).toUpperCase() + news.category.slice(1)}</span>
+                            <span class="category">${getTranslatedCategory(news.category)}</span>
                             <span class="date">${news.dateTime}</span>
                             <h3>${news.title}</h3>
                             <p>${news.content.substring(0, 50)}...</p>
@@ -1069,11 +1150,12 @@
                 try {
                     await db.collection('news').doc(newsId).delete();
 
-                    const newsItem = document.querySelector(`#news-items .news-item[onclick="showPage('${newsId}')"]`);
+                    const newsItem = document.querySelector(`#news-items .news-item[onclick="showNewsDetail('${newsId}')"]`);
                     if (newsItem) newsItem.remove();
                     const newsPage = document.getElementById(newsId);
                     if (newsPage) newsPage.remove();
 
+                    newsData = newsData.filter(n => n.id !== newsId);
                     if (db) loadAdminNewsList();
                     if (db) loadNews();
                     alert('Berita berhasil dihapus!');
