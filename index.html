@@ -685,8 +685,8 @@
     </footer>
 
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
     <script>
         // Konfigurasi Firebase
@@ -700,18 +700,27 @@
             measurementId: "G-4SG58WYT4G"
         };
 
-        // Inisialisasi Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Inisialisasi Firebase dengan error handling
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase initialized successfully.");
+        } catch (error) {
+            console.error("Failed to initialize Firebase:", error);
+            alert("Gagal menginisialisasi Firebase. Fitur berita mungkin tidak berfungsi, tetapi navigasi tetap dapat digunakan.");
+        }
 
         let isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
         let newsData = [];
 
         function showPage(pageId) {
             console.log(`Showing page: ${pageId}, isLoggedIn: ${isLoggedIn}`);
+            // Sembunyikan semua konten
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
+            // Tampilkan halaman yang diminta
             const contentSection = document.getElementById(pageId);
             if (contentSection) {
                 contentSection.classList.add('active');
@@ -719,6 +728,7 @@
                 console.error(`Element with ID ${pageId} not found.`);
                 return;
             }
+            // Perbarui tautan navigasi aktif
             document.querySelectorAll('.nav a').forEach(link => {
                 link.classList.remove('active');
             });
@@ -734,6 +744,7 @@
             if (!foundLink) {
                 console.warn(`No navigation link found for page ${pageId}.`);
             }
+            // Perbarui tombol "Cek Berita Terbaru" di halaman Beranda
             const checkNewsBtn = document.getElementById('check-news-btn');
             if (checkNewsBtn && pageId === 'news-list' && sessionStorage.getItem('fromOtherPage') === 'true') {
                 checkNewsBtn.textContent = 'Kembali';
@@ -746,20 +757,22 @@
                     showPage('news-list');
                 };
             }
+            // Logika untuk halaman admin
             if (isLoggedIn && pageId === 'admin') {
                 const addNewsSection = document.querySelector('#admin .add-news');
                 if (addNewsSection) {
                     addNewsSection.classList.add('active');
                     console.log('Admin panel should now be visible.');
+                    if (db) loadAdminNewsList();
                 } else {
                     console.error('Add news section not found in admin panel.');
                 }
-                loadAdminNewsList();
             } else if (pageId === 'admin' && !isLoggedIn) {
                 alert('Silakan login sebagai admin untuk mengakses panel ini.');
                 showPage('home');
             }
-            if (pageId === 'news-list') {
+            // Muat berita hanya jika di halaman news-list dan Firebase tersedia
+            if (pageId === 'news-list' && db) {
                 loadNews();
             }
             updateNavigation();
@@ -768,19 +781,33 @@
 
         function showLoginModal() {
             const modal = document.getElementById('login-modal');
-            modal.classList.add('active');
+            if (modal) {
+                modal.classList.add('active');
+            } else {
+                console.error('Login modal not found.');
+            }
         }
 
         function closeLoginModal() {
             const modal = document.getElementById('login-modal');
-            modal.classList.remove('active');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
+            if (modal) {
+                modal.classList.remove('active');
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
+                if (usernameInput) usernameInput.value = '';
+                if (passwordInput) passwordInput.value = '';
+            } else {
+                console.error('Login modal not found.');
+            }
         }
 
         function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username')?.value;
+            const password = document.getElementById('password')?.value;
+            if (!username || !password) {
+                alert('Mohon masukkan username dan password.');
+                return;
+            }
             if (username === 'FULLSTATENETWORK' && password === 'FULLSTATENETWORKJAYASELAMANYA') {
                 alert('Login berhasil! Selamat datang, Admin!');
                 isLoggedIn = true;
@@ -796,10 +823,14 @@
 
         function toggleAddNewsForm() {
             const form = document.getElementById('add-news-form');
-            if (form.style.display === 'none' || form.style.display === '') {
-                form.style.display = 'block';
+            if (form) {
+                if (form.style.display === 'none' || form.style.display === '') {
+                    form.style.display = 'block';
+                } else {
+                    form.style.display = 'none';
+                }
             } else {
-                form.style.display = 'none';
+                console.error('Add news form not found.');
             }
         }
 
@@ -818,10 +849,15 @@
 
         async function addNews(event) {
             event.preventDefault();
-            const category = document.getElementById('news-category').value;
-            const title = document.getElementById('news-title').value;
-            const content = document.getElementById('news-content').value;
-            const imageUrl = document.getElementById('news-image-url').value;
+            if (!db) {
+                alert('Firebase tidak tersedia. Tidak dapat menambahkan berita.');
+                return;
+            }
+
+            const category = document.getElementById('news-category')?.value;
+            const title = document.getElementById('news-title')?.value;
+            const content = document.getElementById('news-content')?.value;
+            const imageUrl = document.getElementById('news-image-url')?.value;
 
             if (!category || !title || !content || !imageUrl) {
                 alert('Semua field harus diisi!');
@@ -886,7 +922,7 @@
                     toggleAddNewsForm();
                     alert('Berita berhasil ditambahkan!');
                     showPage('news-list');
-                    loadAdminNewsList();
+                    if (db) loadAdminNewsList();
                     updateDeleteButtonsVisibility();
                 } else {
                     console.error('Element with ID "news-items" not found.');
@@ -898,8 +934,17 @@
         }
 
         async function loadNews() {
+            if (!db) {
+                console.warn('Firebase not initialized. Skipping loadNews.');
+                return;
+            }
+
             try {
                 const newsItems = document.getElementById('news-items');
+                if (!newsItems) {
+                    console.error('Element with ID "news-items" not found.');
+                    return;
+                }
                 newsItems.innerHTML = '';
 
                 const snapshot = await db.collection('news')
@@ -952,9 +997,17 @@
         }
 
         async function loadAdminNewsList() {
+            if (!db) {
+                console.warn('Firebase not initialized. Skipping loadAdminNewsList.');
+                return;
+            }
+
             try {
                 const adminNewsList = document.getElementById('admin-news-list');
-                if (!adminNewsList) return;
+                if (!adminNewsList) {
+                    console.error('Admin news list element not found.');
+                    return;
+                }
 
                 adminNewsList.innerHTML = '';
                 const snapshot = await db.collection('news')
@@ -974,7 +1027,7 @@
                         </div>
                         <button onclick="deleteNews('${news.id}')">Hapus Berita</button>
                     `;
-                    adminNewsList.appendChild(newNewsItem);
+                    adminNewsList.appendChild(newsItem);
                 });
             } catch (error) {
                 console.error('Error loading admin news list:', error);
@@ -982,6 +1035,11 @@
         }
 
         async function deleteNews(newsId) {
+            if (!db) {
+                alert('Firebase tidak tersedia. Tidak dapat menghapus berita.');
+                return;
+            }
+
             if (confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
                 try {
                     await db.collection('news').doc(newsId).delete();
@@ -991,8 +1049,8 @@
                     const newsPage = document.getElementById(newsId);
                     if (newsPage) newsPage.remove();
 
-                    loadAdminNewsList();
-                    loadNews();
+                    if (db) loadAdminNewsList();
+                    if (db) loadNews();
                     alert('Berita berhasil dihapus!');
                     showPage('news-list');
                 } catch (error) {
@@ -1015,6 +1073,10 @@
 
         function updateNavigation() {
             const nav = document.getElementById('nav-links');
+            if (!nav) {
+                console.error('Navigation element not found.');
+                return;
+            }
             const existingAdminLink = nav.querySelector('a[onclick="showPage(\'admin\')"]');
             if (isLoggedIn) {
                 if (!existingAdminLink) {
@@ -1033,13 +1095,19 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded and parsed.');
             const form = document.getElementById('add-news-form');
             if (form) {
                 form.addEventListener('submit', addNews);
             } else {
                 console.error('Form with ID "add-news-form" not found.');
             }
-            loadNews();
+            // Muat berita hanya jika Firebase tersedia
+            if (db) {
+                loadNews();
+            } else {
+                console.warn('Skipping loadNews because Firebase is not initialized.');
+            }
             updateNavigation();
             if (isLoggedIn) {
                 showPage('admin');
@@ -1047,6 +1115,12 @@
                 showPage('home');
             }
         });
+
+        // Deteksi error script loading
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error(`Script error detected: ${message} at ${source}:${lineno}:${colno}`, error);
+            alert('Terjadi kesalahan pada skrip. Silakan periksa konsol browser untuk detail lebih lanjut.');
+        };
     </script>
 </body>
 </html>
