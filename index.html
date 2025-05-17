@@ -374,7 +374,7 @@
         .admin .add-news.active {
             display: block;
         }
-        .admin .add-news select, .admin .add-news input, .admin .add-news textarea, .admin .add-news .file-input {
+        .admin .add-news select, .admin .add-news input, .admin .add-news textarea {
             display: block;
             width: 100%;
             padding: 0.5rem;
@@ -382,6 +382,12 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             outline: none;
+        }
+        .admin .add-news p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.4;
         }
         .admin .add-news button {
             padding: 0.5rem 1rem;
@@ -627,7 +633,12 @@
                     </select>
                     <input type="text" id="news-title" placeholder="Judul Berita" required>
                     <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
-                    <input type="file" id="news-image" class="file-input" accept="image/*" required>
+                    <input type="text" id="news-image-url" placeholder="Masukkan Direct Link dari Imgbox (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg)" required>
+                    <p>Cara mendapatkan Direct Link dari Imgbox:<br>
+                    1. Buka situs Imgbox (cari "Imgbox image hosting" di mesin pencari).<br>
+                    2. Klik "Upload" dan pilih gambar dari perangkat Anda (maksimal 10 MB).<br>
+                    3. Setelah selesai, salin "Direct Link" (biasanya berakhiran .jpg atau .png).<br>
+                    4. Tempelkan tautan tersebut di kolom ini.</p>
                     <button type="submit">Tambah Berita</button>
                 </form>
             </div>
@@ -676,24 +687,21 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
 
     <script>
         // Konfigurasi Firebase (Ganti dengan konfigurasi Anda dari Firebase Console)
         const firebaseConfig = {
-          apiKey: "AIzaSyCNuLH9W-LqSkyLgZyqGzzXi_q50pb7bXQ",
-          authDomain: "fullstate-network.firebaseapp.com",
-          projectId: "fullstate-network",
-          storageBucket: "fullstate-network.firebasestorage.app",
-          messagingSenderId: "538971846872",
-          appId: "1:538971846872:web:4c7f49386e5325f8eebfad",
-          measurementId: "G-4SG58WYT4G"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "fullstate-network-71664607.firebaseapp.com",
+            projectId: "fullstate-network-71664607",
+            storageBucket: "fullstate-network-71664607.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         // Inisialisasi Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
 
         let isLoggedIn = false;
         let newsData = [];
@@ -802,20 +810,20 @@
             const category = document.getElementById('news-category').value;
             const title = document.getElementById('news-title').value;
             const content = document.getElementById('news-content').value;
-            const imageInput = document.getElementById('news-image');
-            const file = imageInput.files[0];
+            const imageUrl = document.getElementById('news-image-url').value;
 
-            if (!category || !title || !content || !file) {
-                alert('Semua field, termasuk foto, harus diisi!');
+            if (!category || !title || !content || !imageUrl) {
+                alert('Semua field harus diisi!');
+                return;
+            }
+
+            // Validasi URL gambar (opsional, untuk memastikan format Imgbox)
+            if (!imageUrl.includes('imgbox.com')) {
+                alert('Harap masukkan Direct Link dari Imgbox (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg)');
                 return;
             }
 
             try {
-                // Upload gambar ke Firebase Storage
-                const storageRef = storage.ref(`news-images/${file.name}`);
-                await storageRef.put(file);
-                const imageUrl = await storageRef.getDownloadURL();
-
                 // Simpan data berita ke Firestore
                 const dateTime = formatDateTime();
                 const newNews = {
