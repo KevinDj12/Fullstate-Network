@@ -221,6 +221,7 @@
         }
         .news-item {
             display: flex;
+            justify-content: space-between;
             align-items: flex-start;
             background: white;
             border-radius: 10px;
@@ -243,6 +244,7 @@
         }
         .news-item .info {
             text-align: left;
+            flex-grow: 1;
         }
         .news-item .info span.category {
             font-size: 0.8rem;
@@ -265,6 +267,22 @@
             font-size: 0.9rem;
             color: #666;
         }
+        .news-item button.delete-btn {
+            padding: 0.25rem 0.75rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .news-item button.delete-btn.visible {
+            display: block;
+        }
+        .news-item button.delete-btn:hover {
+            background: #dc2626;
+        }
         .news-detail {
             padding: 4rem 2rem;
             text-align: center;
@@ -272,10 +290,14 @@
             margin: 0 auto;
             position: relative;
         }
+        .news-detail .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
         .news-detail .back-btn {
             display: inline-block;
             padding: 0.5rem 1rem;
-            margin-top: 1rem;
             background: #3b82f6;
             color: white;
             text-decoration: none;
@@ -286,6 +308,22 @@
         }
         .news-detail .back-btn:hover {
             background: #2563eb;
+        }
+        .news-detail .delete-btn {
+            display: none;
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .news-detail .delete-btn.visible {
+            display: inline-block;
+        }
+        .news-detail .delete-btn:hover {
+            background: #dc2626;
         }
         .news-detail img {
             width: 100%;
@@ -350,6 +388,37 @@
         }
         .admin .add-news button:hover {
             background: #2563eb;
+        }
+        .admin .news-list {
+            max-width: 800px;
+            margin: 0 auto;
+            margin-top: 2rem;
+        }
+        .admin .news-list .news-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .admin .news-list .news-item .info {
+            text-align: left;
+            flex-grow: 1;
+        }
+        .admin .news-list .news-item button {
+            padding: 0.25rem 0.75rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .admin .news-list .news-item button:hover {
+            background: #dc2626;
         }
         .profile, .community {
             padding: 4rem 2rem;
@@ -537,6 +606,7 @@
                     <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
                     <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama...</p>
                 </div>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('accident')">Hapus Berita</button>
             </div>
             <div class="news-item" onclick="showPage('politics')">
                 <img src="https://via.placeholder.com/24?text=Politik" alt="Politik">
@@ -546,6 +616,7 @@
                     <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
                     <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025...</p>
                 </div>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('politics')">Hapus Berita</button>
             </div>
             <div class="news-item" onclick="showPage('sports')">
                 <img src="https://via.placeholder.com/24?text=Olahraga" alt="Olahraga">
@@ -555,6 +626,7 @@
                     <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
                     <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu...</p>
                 </div>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('sports')">Hapus Berita</button>
             </div>
         </div>
     </div>
@@ -563,7 +635,10 @@
             <img src="https://via.placeholder.com/800x300?text=Kecelakaan" alt="Kecelakaan">
             <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
             <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama Fullstate yang melibatkan tiga kendaraan. Insiden ini menyebabkan dua orang luka ringan dan arus lalu lintas terhambat selama beberapa jam. Menurut laporan awal, kecelakaan ini terjadi akibat kelalaian pengemudi yang tidak menjaga jarak aman. Pihak berwenang sedang menyelidiki lebih lanjut untuk menentukan penyebab pasti.</p>
-            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+            <div class="button-group">
+                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                <button class="delete-btn" onclick="deleteNews('accident')">Hapus Berita</button>
+            </div>
         </div>
     </div>
     <div id="politics" class="content">
@@ -571,7 +646,10 @@
             <img src="https://via.placeholder.com/800x300?text=Politik" alt="Politik">
             <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
             <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025. Beberapa kandidat telah mengajukan diri, termasuk tokoh terkenal yang telah lama berkontribusi dalam politik lokal. Kampanye diperkirakan akan berlangsung sengit, dengan fokus pada isu ekonomi dan infrastruktur. Warga Fullstate diharapkan berpartisipasi aktif dalam proses demokrasi ini.</p>
-            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+            <div class="button-group">
+                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                <button class="delete-btn" onclick="deleteNews('politics')">Hapus Berita</button>
+            </div>
         </div>
     </div>
     <div id="sports" class="content">
@@ -579,7 +657,10 @@
             <img src="https://via.placeholder.com/800x300?text=Olahraga" alt="Olahraga">
             <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
             <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu pada pertandingan terakhir mereka di Stadion Utama Fullstate, 13 Mei 2025. Gol-gol dari pemain bintang mereka membawa tim ini naik ke peringkat atas klasemen sementara. Pelatih menyatakan bahwa tim akan terus berlatih keras untuk mempertahankan performa mereka di laga berikutnya.</p>
-            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+            <div class="button-group">
+                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                <button class="delete-btn" onclick="deleteNews('sports')">Hapus Berita</button>
+            </div>
         </div>
     </div>
     <div id="community" class="content">
@@ -603,6 +684,9 @@
                     <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
                     <button type="submit">Tambah Berita</button>
                 </form>
+            </div>
+            <div class="news-list" id="admin-news-list">
+                <!-- Berita yang dapat dihapus akan ditampilkan di sini -->
             </div>
         </div>
     </div>
@@ -688,6 +772,7 @@
             }
             if (isLoggedIn && pageId === 'admin') {
                 document.querySelector('#admin .add-news').classList.add('active');
+                loadAdminNewsList();
             } else {
                 document.querySelectorAll('.add-news').forEach(el => el.classList.remove('active'));
             }
@@ -695,6 +780,7 @@
                 loadNews();
             }
             updateNavigation();
+            updateDeleteButtonsVisibility();
         }
 
         function showLoginModal() {
@@ -717,6 +803,7 @@
                 isLoggedIn = true;
                 closeLoginModal();
                 showPage('admin');
+                updateDeleteButtonsVisibility();
             } else {
                 alert('Username atau password salah!');
             }
@@ -779,6 +866,7 @@
                             <h3>${title}</h3>
                             <p>${content.substring(0, 50)}...</p>
                         </div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
                     `;
                     newsItems.insertBefore(newNewsItem, newsItems.firstChild);
 
@@ -790,7 +878,10 @@
                             <img src="https://via.placeholder.com/800x300?text=${category.charAt(0).toUpperCase() + category.slice(1)}" alt="${category}">
                             <h3>${title}</h3>
                             <p>${content}</p>
-                            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                            <div class="button-group">
+                                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                                <button class="delete-btn" onclick="deleteNews('${newNewsId}')">Hapus Berita</button>
+                            </div>
                         </div>
                     `;
                     document.body.appendChild(newNewsPage);
@@ -799,6 +890,8 @@
                     toggleAddNewsForm();
                     alert('Berita berhasil ditambahkan!');
                     showPage('news-list');
+                    loadAdminNewsList();
+                    updateDeleteButtonsVisibility();
                 } else {
                     console.error('Element with ID "news-items" not found.');
                 }
@@ -821,6 +914,7 @@
                             <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
                             <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama...</p>
                         </div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('accident')">Hapus Berita</button>
                     </div>
                     <div class="news-item" onclick="showPage('politics')">
                         <img src="https://via.placeholder.com/24?text=Politik" alt="Politik">
@@ -830,6 +924,7 @@
                             <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
                             <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025...</p>
                         </div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('politics')">Hapus Berita</button>
                     </div>
                     <div class="news-item" onclick="showPage('sports')">
                         <img src="https://via.placeholder.com/24?text=Olahraga" alt="Olahraga">
@@ -839,6 +934,7 @@
                             <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
                             <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu...</p>
                         </div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('sports')">Hapus Berita</button>
                     </div>
                 `;
                 newsData.forEach(news => {
@@ -853,6 +949,7 @@
                             <h3>${news.title}</h3>
                             <p>${news.content.substring(0, 50)}...</p>
                         </div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${news.id}')">Hapus Berita</button>
                     `;
                     newsItems.insertBefore(newNewsItem, newsItems.firstChild);
 
@@ -865,14 +962,67 @@
                                 <img src="https://via.placeholder.com/800x300?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}" alt="${news.category}">
                                 <h3>${news.title}</h3>
                                 <p>${news.content}</p>
-                                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                                <div class="button-group">
+                                    <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                                    <button class="delete-btn" onclick="deleteNews('${news.id}')">Hapus Berita</button>
+                                </div>
                             </div>
                         `;
                         document.body.appendChild(newNewsPage);
                     }
                 });
                 newsCounter = newsData.length;
+                updateDeleteButtonsVisibility();
             }
+        }
+
+        function loadAdminNewsList() {
+            const storedNews = localStorage.getItem('newsData');
+            const adminNewsList = document.getElementById('admin-news-list');
+            if (storedNews && adminNewsList) {
+                newsData = JSON.parse(storedNews);
+                adminNewsList.innerHTML = '';
+                newsData.forEach(news => {
+                    const newsItem = document.createElement('div');
+                    newsItem.className = 'news-item';
+                    newsItem.innerHTML = `
+                        <div class="info">
+                            <span class="category">${news.category.charAt(0).toUpperCase() + news.category.slice(1)}</span>
+                            <span class="date">${news.dateTime}</span>
+                            <h3>${news.title}</h3>
+                            <p>${news.content.substring(0, 50)}...</p>
+                        </div>
+                        <button onclick="deleteNews('${news.id}')">Hapus Berita</button>
+                    `;
+                    adminNewsList.appendChild(newsItem);
+                });
+            }
+        }
+
+        function deleteNews(newsId) {
+            if (confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
+                newsData = newsData.filter(news => news.id !== newsId);
+                localStorage.setItem('newsData', JSON.stringify(newsData));
+                const newsItem = document.querySelector(`#news-items .news-item[onclick="showPage('${newsId}')"]`);
+                if (newsItem) newsItem.remove();
+                const newsPage = document.getElementById(newsId);
+                if (newsPage) newsPage.remove();
+                loadAdminNewsList();
+                loadNews();
+                alert('Berita berhasil dihapus!');
+                showPage('news-list');
+            }
+        }
+
+        function updateDeleteButtonsVisibility() {
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            deleteButtons.forEach(button => {
+                if (isLoggedIn) {
+                    button.classList.add('visible');
+                } else {
+                    button.classList.remove('visible');
+                }
+            });
         }
 
         function updateNavigation() {
