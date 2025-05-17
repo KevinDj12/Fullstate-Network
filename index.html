@@ -118,10 +118,10 @@
             padding: 4rem 2rem;
             text-align: center;
             flex: 1 0 auto;
-            min-height: calc(100vh - 200px); /* Memastikan konten cukup tinggi */
         }
         .content.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
         .hero {
             background: #000000;
@@ -289,8 +289,11 @@
             text-align: center;
             max-width: 800px;
             margin: 0 auto;
-            position: relative;
-            min-height: calc(100vh - 200px); /* Memastikan konten cukup tinggi */
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: calc(100vh - 300px);
         }
         .news-detail .button-group {
             display: flex;
@@ -344,6 +347,7 @@
             color: #666;
             line-height: 1.8;
             text-align: left;
+            flex: 1 0 auto;
         }
         .admin {
             padding: 4rem 2rem;
@@ -425,7 +429,6 @@
         .profile, .community {
             padding: 4rem 2rem;
             text-align: center;
-            position: relative;
         }
         .profile h2, .community h2 {
             font-size: 2.5rem;
@@ -601,69 +604,7 @@
     <div id="news-list" class="content">
         <h2>Berita Terkini</h2>
         <div class="news-items" id="news-items">
-            <div class="news-item" onclick="showPage('accident')">
-                <img src="https://via.placeholder.com/24?text=Kecelakaan" alt="Kecelakaan">
-                <div class="info">
-                    <span class="category">Kecelakaan</span>
-                    <span class="date">Selasa, 08:00 WIB, 13 Mei 2025</span>
-                    <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
-                    <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama...</p>
-                </div>
-                <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('accident')">Hapus Berita</button>
-            </div>
-            <div class="news-item" onclick="showPage('politics')">
-                <img src="https://via.placeholder.com/24?text=Politik" alt="Politik">
-                <div class="info">
-                    <span class="category">Politik</span>
-                    <span class="date">Selasa, 09:00 WIB, 13 Mei 2025</span>
-                    <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
-                    <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025...</p>
-                </div>
-                <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('politics')">Hapus Berita</button>
-            </div>
-            <div class="news-item" onclick="showPage('sports')">
-                <img src="https://via.placeholder.com/24?text=Olahraga" alt="Olahraga">
-                <div class="info">
-                    <span class="category">Olahraga</span>
-                    <span class="date">Selasa, 10:00 WIB, 13 Mei 2025</span>
-                    <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
-                    <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu...</p>
-                </div>
-                <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('sports')">Hapus Berita</button>
-            </div>
-        </div>
-    </div>
-    <div id="accident" class="content">
-        <div class="news-detail">
-            <img src="https://via.placeholder.com/800x300?text=Kecelakaan" alt="Kecelakaan">
-            <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
-            <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama Fullstate yang melibatkan tiga kendaraan. Insiden ini menyebabkan dua orang luka ringan dan arus lalu lintas terhambat selama beberapa jam. Menurut laporan awal, kecelakaan ini terjadi akibat kelalaian pengemudi yang tidak menjaga jarak aman. Pihak berwenang sedang menyelidiki lebih lanjut untuk menentukan penyebab pasti.</p>
-            <div class="button-group">
-                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
-                <button class="delete-btn" onclick="deleteNews('accident')">Hapus Berita</button>
-            </div>
-        </div>
-    </div>
-    <div id="politics" class="content">
-        <div class="news-detail">
-            <img src="https://via.placeholder.com/800x300?text=Politik" alt="Politik">
-            <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
-            <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025. Beberapa kandidat telah mengajukan diri, termasuk tokoh terkenal yang telah lama berkontribusi dalam politik lokal. Kampanye diperkirakan akan berlangsung sengit, dengan fokus pada isu ekonomi dan infrastruktur. Warga Fullstate diharapkan berpartisipasi aktif dalam proses demokrasi ini.</p>
-            <div class="button-group">
-                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
-                <button class="delete-btn" onclick="deleteNews('politics')">Hapus Berita</button>
-            </div>
-        </div>
-    </div>
-    <div id="sports" class="content">
-        <div class="news-detail">
-            <img src="https://via.placeholder.com/800x300?text=Olahraga" alt="Olahraga">
-            <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
-            <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu pada pertandingan terakhir mereka di Stadion Utama Fullstate, 13 Mei 2025. Gol-gol dari pemain bintang mereka membawa tim ini naik ke peringkat atas klasemen sementara. Pelatih menyatakan bahwa tim akan terus berlatih keras untuk mempertahankan performa mereka di laga berikutnya.</p>
-            <div class="button-group">
-                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
-                <button class="delete-btn" onclick="deleteNews('sports')">Hapus Berita</button>
-            </div>
+            <!-- Berita akan dimuat secara dinamis -->
         </div>
     </div>
     <div id="community" class="content">
@@ -732,9 +673,28 @@
         </div>
     </footer>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+
     <script>
+        // Konfigurasi Firebase (Ganti dengan konfigurasi Anda dari Firebase Console)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
         let isLoggedIn = false;
-        let newsCounter = 0;
         let newsData = [];
 
         function showPage(pageId) {
@@ -825,7 +785,7 @@
 
         function formatDateTime() {
             const now = new Date();
-            const days = ['Sabtu', 'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const day = days[now.getDay()];
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
@@ -836,7 +796,7 @@
             return `${day}, ${hours}:${minutes} WIB, ${date} ${month} ${year}`;
         }
 
-        function addNews(event) {
+        async function addNews(event) {
             event.preventDefault();
             const category = document.getElementById('news-category').value;
             const title = document.getElementById('news-title').value;
@@ -849,104 +809,93 @@
                 return;
             }
 
-            newsCounter++;
-            const newNewsId = `news-${newsCounter}`;
-            const dateTime = formatDateTime();
+            try {
+                // Upload gambar ke Firebase Storage
+                const storageRef = storage.ref(`news-images/${file.name}`);
+                await storageRef.put(file);
+                const imageUrl = await storageRef.getDownloadURL();
 
-            const newsItem = {
-                id: newNewsId,
-                category: category,
-                title: title,
-                content: content,
-                dateTime: dateTime,
-                image: URL.createObjectURL(file)
-            };
+                // Simpan data berita ke Firestore
+                const dateTime = formatDateTime();
+                const newNews = {
+                    category: category,
+                    title: title,
+                    content: content,
+                    dateTime: dateTime,
+                    image: imageUrl,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
 
-            newsData.push(newsItem);
-            localStorage.setItem('newsData', JSON.stringify(newsData));
+                const docRef = await db.collection('news').add(newNews);
+                const newNewsId = docRef.id;
 
-            const newsItems = document.getElementById('news-items');
-            if (newsItems) {
-                const newNewsItem = document.createElement('div');
-                newNewsItem.className = 'news-item';
-                newNewsItem.onclick = () => showPage(newNewsId);
-                newNewsItem.innerHTML = `
-                    <img src="${newsItem.image}" alt="${category}">
-                    <div class="info">
-                        <span class="category">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                        <span class="date">${dateTime}</span>
-                        <h3>${title}</h3>
-                        <p>${content.substring(0, 50)}...</p>
-                    </div>
-                    <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
-                `;
-                newsItems.insertBefore(newNewsItem, newsItems.firstChild);
+                // Tambahkan ID ke dokumen untuk referensi
+                await docRef.update({ id: newNewsId });
 
-                const newNewsPage = document.createElement('div');
-                newNewsPage.id = newNewsId;
-                newNewsPage.className = 'content';
-                newNewsPage.innerHTML = `
-                    <div class="news-detail">
-                        <img src="${newsItem.image}" alt="${category}">
-                        <h3>${title}</h3>
-                        <p>${content}</p>
-                        <div class="button-group">
-                            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
-                            <button class="delete-btn" onclick="deleteNews('${newNewsId}')">Hapus Berita</button>
+                // Buat elemen berita baru di halaman
+                const newsItems = document.getElementById('news-items');
+                if (newsItems) {
+                    const newNewsItem = document.createElement('div');
+                    newNewsItem.className = 'news-item';
+                    newNewsItem.onclick = () => showPage(newNewsId);
+                    newNewsItem.innerHTML = `
+                        <img src="${imageUrl}" alt="${category}">
+                        <div class="info">
+                            <span class="category">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                            <span class="date">${dateTime}</span>
+                            <h3>${title}</h3>
+                            <p>${content.substring(0, 50)}...</p>
                         </div>
-                    </div>
-                `;
-                document.body.appendChild(newNewsPage);
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
+                    `;
+                    newsItems.insertBefore(newNewsItem, newsItems.firstChild);
 
-                document.getElementById('add-news-form').reset();
-                toggleAddNewsForm();
-                alert('Berita berhasil ditambahkan!');
-                showPage('news-list');
-                loadAdminNewsList();
-                updateDeleteButtonsVisibility();
-            } else {
-                console.error('Element with ID "news-items" not found.');
+                    const newNewsPage = document.createElement('div');
+                    newNewsPage.id = newNewsId;
+                    newNewsPage.className = 'content';
+                    newNewsPage.innerHTML = `
+                        <div class="news-detail">
+                            <img src="${imageUrl}" alt="${category}">
+                            <h3>${title}</h3>
+                            <p>${content}</p>
+                            <div class="button-group">
+                                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                                <button class="delete-btn" onclick="deleteNews('${newNewsId}')">Hapus Berita</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(newNewsPage);
+
+                    document.getElementById('add-news-form').reset();
+                    toggleAddNewsForm();
+                    alert('Berita berhasil ditambahkan!');
+                    showPage('news-list');
+                    loadAdminNewsList();
+                    updateDeleteButtonsVisibility();
+                } else {
+                    console.error('Element with ID "news-items" not found.');
+                }
+            } catch (error) {
+                console.error('Error adding news:', error);
+                alert('Gagal menambahkan berita. Silakan coba lagi.');
             }
         }
 
-        function loadNews() {
-            const storedNews = localStorage.getItem('newsData');
-            if (storedNews) {
-                newsData = JSON.parse(storedNews);
+        async function loadNews() {
+            try {
                 const newsItems = document.getElementById('news-items');
-                newsItems.innerHTML = `
-                    <div class="news-item" onclick="showPage('accident')">
-                        <img src="https://via.placeholder.com/24?text=Kecelakaan" alt="Kecelakaan">
-                        <div class="info">
-                            <span class="category">Kecelakaan</span>
-                            <span class="date">Selasa, 08:00 WIB, 13 Mei 2025</span>
-                            <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
-                            <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama...</p>
-                        </div>
-                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('accident')">Hapus Berita</button>
-                    </div>
-                    <div class="news-item" onclick="showPage('politics')">
-                        <img src="https://via.placeholder.com/24?text=Politik" alt="Politik">
-                        <div class="info">
-                            <span class="category">Politik</span>
-                            <span class="date">Selasa, 09:00 WIB, 13 Mei 2025</span>
-                            <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
-                            <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025...</p>
-                        </div>
-                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('politics')">Hapus Berita</button>
-                    </div>
-                    <div class="news-item" onclick="showPage('sports')">
-                        <img src="https://via.placeholder.com/24?text=Olahraga" alt="Olahraga">
-                        <div class="info">
-                            <span class="category">Olahraga</span>
-                            <span class="date">Selasa, 10:00 WIB, 13 Mei 2025</span>
-                            <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
-                            <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu...</p>
-                        </div>
-                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('sports')">Hapus Berita</button>
-                    </div>
-                `;
-                newsData.forEach(news => {
+                newsItems.innerHTML = ''; // Kosongkan daftar berita
+
+                // Ambil data dari Firestore
+                const snapshot = await db.collection('news')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                newsData = [];
+                snapshot.forEach(doc => {
+                    const news = doc.data();
+                    newsData.push(news);
+
                     const newNewsItem = document.createElement('div');
                     newNewsItem.className = 'news-item';
                     newNewsItem.onclick = () => showPage(news.id);
@@ -960,7 +909,7 @@
                         </div>
                         <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${news.id}')">Hapus Berita</button>
                     `;
-                    newsItems.insertBefore(newNewsItem, newsItems.firstChild);
+                    newsItems.appendChild(newNewsItem);
 
                     if (!document.getElementById(news.id)) {
                         const newNewsPage = document.createElement('div');
@@ -980,18 +929,25 @@
                         document.body.appendChild(newNewsPage);
                     }
                 });
-                newsCounter = newsData.length;
                 updateDeleteButtonsVisibility();
+            } catch (error) {
+                console.error('Error loading news:', error);
+                alert('Gagal memuat berita. Silakan refresh halaman.');
             }
         }
 
-        function loadAdminNewsList() {
-            const storedNews = localStorage.getItem('newsData');
-            const adminNewsList = document.getElementById('admin-news-list');
-            if (storedNews && adminNewsList) {
-                newsData = JSON.parse(storedNews);
+        async function loadAdminNewsList() {
+            try {
+                const adminNewsList = document.getElementById('admin-news-list');
+                if (!adminNewsList) return;
+
                 adminNewsList.innerHTML = '';
-                newsData.forEach(news => {
+                const snapshot = await db.collection('news')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                snapshot.forEach(doc => {
+                    const news = doc.data();
                     const newsItem = document.createElement('div');
                     newsItem.className = 'news-item';
                     newsItem.innerHTML = `
@@ -1005,21 +961,31 @@
                     `;
                     adminNewsList.appendChild(newsItem);
                 });
+            } catch (error) {
+                console.error('Error loading admin news list:', error);
             }
         }
 
-        function deleteNews(newsId) {
+        async function deleteNews(newsId) {
             if (confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
-                newsData = newsData.filter(news => news.id !== newsId);
-                localStorage.setItem('newsData', JSON.stringify(newsData));
-                const newsItem = document.querySelector(`#news-items .news-item[onclick="showPage('${newsId}')"]`);
-                if (newsItem) newsItem.remove();
-                const newsPage = document.getElementById(newsId);
-                if (newsPage) newsPage.remove();
-                loadAdminNewsList();
-                loadNews();
-                alert('Berita berhasil dihapus!');
-                showPage('news-list');
+                try {
+                    // Hapus dari Firestore
+                    await db.collection('news').doc(newsId).delete();
+
+                    // Hapus elemen dari DOM
+                    const newsItem = document.querySelector(`#news-items .news-item[onclick="showPage('${newsId}')"]`);
+                    if (newsItem) newsItem.remove();
+                    const newsPage = document.getElementById(newsId);
+                    if (newsPage) newsPage.remove();
+
+                    loadAdminNewsList();
+                    loadNews();
+                    alert('Berita berhasil dihapus!');
+                    showPage('news-list');
+                } catch (error) {
+                    console.error('Error deleting news:', error);
+                    alert('Gagal menghapus berita. Silakan coba lagi.');
+                }
             }
         }
 
