@@ -289,11 +289,12 @@
             text-align: center;
             max-width: 800px;
             margin: 0 auto;
-            flex: 1 0 auto;
+            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             min-height: calc(100vh - 300px);
+            overflow-y: auto;
         }
         .news-detail .button-group {
             display: flex;
@@ -348,6 +349,7 @@
             line-height: 1.8;
             text-align: left;
             flex: 1 0 auto;
+            overflow-wrap: break-word;
         }
         .admin {
             padding: 4rem 2rem;
@@ -432,6 +434,19 @@
         .admin .news-list .news-item button:hover {
             background: #dc2626;
         }
+        .admin .logout-btn {
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 2rem;
+        }
+        .admin .logout-btn:hover {
+            background: #dc2626;
+        }
         .profile, .community {
             padding: 4rem 2rem;
             text-align: center;
@@ -508,6 +523,7 @@
             text-align: left;
             flex-shrink: 0;
             width: 100%;
+            position: relative;
         }
         .footer .footer-content {
             display: flex;
@@ -645,6 +661,7 @@
             <div class="news-list" id="admin-news-list">
                 <!-- Berita yang dapat dihapus akan ditampilkan di sini -->
             </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
 
@@ -711,8 +728,13 @@
             alert("Gagal menginisialisasi Firebase. Fitur berita mungkin tidak berfungsi, tetapi navigasi tetap dapat digunakan.");
         }
 
-        let isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+        let isLoggedIn = false; // Set default to false on page load
         let newsData = [];
+
+        // Periksa sessionStorage hanya untuk menentukan status awal
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            isLoggedIn = true;
+        }
 
         function showPage(pageId) {
             console.log(`Showing page: ${pageId}, isLoggedIn: ${isLoggedIn}`);
@@ -758,6 +780,11 @@
                 };
             }
             // Logika untuk halaman admin
+            if (pageId === 'admin' && !isLoggedIn) {
+                alert('Silakan login sebagai admin untuk mengakses panel ini.');
+                showPage('home');
+                return;
+            }
             if (isLoggedIn && pageId === 'admin') {
                 const addNewsSection = document.querySelector('#admin .add-news');
                 if (addNewsSection) {
@@ -767,9 +794,6 @@
                 } else {
                     console.error('Add news section not found in admin panel.');
                 }
-            } else if (pageId === 'admin' && !isLoggedIn) {
-                alert('Silakan login sebagai admin untuk mengakses panel ini.');
-                showPage('home');
             }
             // Muat berita hanya jika di halaman news-list dan Firebase tersedia
             if (pageId === 'news-list' && db) {
@@ -939,12 +963,13 @@
                 return;
             }
 
+            const newsItems = document.getElementById('news-items');
+            if (!newsItems) {
+                console.error('Element with ID "news-items" not found.');
+                return;
+            }
+
             try {
-                const newsItems = document.getElementById('news-items');
-                if (!newsItems) {
-                    console.error('Element with ID "news-items" not found.');
-                    return;
-                }
                 newsItems.innerHTML = '';
 
                 const snapshot = await db.collection('news')
@@ -992,7 +1017,7 @@
                 updateDeleteButtonsVisibility();
             } catch (error) {
                 console.error('Error loading news:', error);
-                alert('Gagal memuat berita. Silakan refresh halaman.');
+                alert('Gagal memuat berita. Periksa konsol untuk detail lebih lanjut.');
             }
         }
 
@@ -1094,6 +1119,15 @@
             }
         }
 
+        function logout() {
+            isLoggedIn = false;
+            sessionStorage.removeItem('isLoggedIn');
+            updateNavigation();
+            updateDeleteButtonsVisibility();
+            alert('Logout berhasil!');
+            showPage('home');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM fully loaded and parsed.');
             const form = document.getElementById('add-news-form');
@@ -1102,6 +1136,8 @@
             } else {
                 console.error('Form with ID "add-news-form" not found.');
             }
+            // Selalu tampilkan halaman beranda saat halaman dimuat
+            showPage('home');
             // Muat berita hanya jika Firebase tersedia
             if (db) {
                 loadNews();
@@ -1109,11 +1145,6 @@
                 console.warn('Skipping loadNews because Firebase is not initialized.');
             }
             updateNavigation();
-            if (isLoggedIn) {
-                showPage('admin');
-            } else {
-                showPage('home');
-            }
         });
 
         // Deteksi error script loading
