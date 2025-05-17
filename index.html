@@ -118,6 +118,7 @@
             padding: 4rem 2rem;
             text-align: center;
             flex: 1 0 auto;
+            min-height: calc(100vh - 200px); /* Memastikan konten cukup tinggi */
         }
         .content.active {
             display: block;
@@ -368,7 +369,7 @@
         .admin .add-news.active {
             display: block;
         }
-        .admin .add-news select, .admin .add-news input, .admin .add-news textarea {
+        .admin .add-news select, .admin .add-news input, .admin .add-news textarea, .admin .add-news .file-input {
             display: block;
             width: 100%;
             padding: 0.5rem;
@@ -675,13 +676,15 @@
             <div class="add-news">
                 <button onclick="toggleAddNewsForm()">Tambah Berita</button>
                 <form id="add-news-form" style="display: none;">
-                    <select name="category" id="news-category">
+                    <select name="category" id="news-category" required>
+                        <option value="" disabled selected>Pilih Kategori</option>
                         <option value="accident">Kecelakaan</option>
                         <option value="politics">Politik</option>
                         <option value="sports">Olahraga</option>
                     </select>
                     <input type="text" id="news-title" placeholder="Judul Berita" required>
                     <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
+                    <input type="file" id="news-image" class="file-input" accept="image/*" required>
                     <button type="submit">Tambah Berita</button>
                 </form>
             </div>
@@ -820,7 +823,7 @@
 
         function formatDateTime() {
             const now = new Date();
-            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const days = ['Sabtu', 'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
             const day = days[now.getDay()];
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
@@ -836,67 +839,71 @@
             const category = document.getElementById('news-category').value;
             const title = document.getElementById('news-title').value;
             const content = document.getElementById('news-content').value;
+            const imageInput = document.getElementById('news-image');
+            const file = imageInput.files[0];
 
-            if (title && content) {
-                newsCounter++;
-                const newNewsId = `news-${newsCounter}`;
-                const dateTime = formatDateTime();
+            if (!category || !title || !content || !file) {
+                alert('Semua field, termasuk foto, harus diisi!');
+                return;
+            }
 
-                const newsItem = {
-                    id: newNewsId,
-                    category: category,
-                    title: title,
-                    content: content,
-                    dateTime: dateTime
-                };
+            newsCounter++;
+            const newNewsId = `news-${newsCounter}`;
+            const dateTime = formatDateTime();
 
-                newsData.push(newsItem);
-                localStorage.setItem('newsData', JSON.stringify(newsData));
+            const newsItem = {
+                id: newNewsId,
+                category: category,
+                title: title,
+                content: content,
+                dateTime: dateTime,
+                image: URL.createObjectURL(file) // Simpan URL sementara untuk preview
+            };
 
-                const newsItems = document.getElementById('news-items');
-                if (newsItems) {
-                    const newNewsItem = document.createElement('div');
-                    newNewsItem.className = 'news-item';
-                    newNewsItem.onclick = () => showPage(newNewsId);
-                    newNewsItem.innerHTML = `
-                        <img src="https://via.placeholder.com/24?text=${category.charAt(0).toUpperCase() + category.slice(1)}" alt="${category}">
-                        <div class="info">
-                            <span class="category">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                            <span class="date">${dateTime}</span>
-                            <h3>${title}</h3>
-                            <p>${content.substring(0, 50)}...</p>
+            newsData.push(newsItem);
+            localStorage.setItem('newsData', JSON.stringify(newsData));
+
+            const newsItems = document.getElementById('news-items');
+            if (newsItems) {
+                const newNewsItem = document.createElement('div');
+                newNewsItem.className = 'news-item';
+                newNewsItem.onclick = () => showPage(newNewsId);
+                newNewsItem.innerHTML = `
+                    <img src="${newsItem.image}" alt="${category}">
+                    <div class="info">
+                        <span class="category">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                        <span class="date">${dateTime}</span>
+                        <h3>${title}</h3>
+                        <p>${content.substring(0, 50)}...</p>
+                    </div>
+                    <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
+                `;
+                newsItems.insertBefore(newNewsItem, newsItems.firstChild);
+
+                const newNewsPage = document.createElement('div');
+                newNewsPage.id = newNewsId;
+                newNewsPage.className = 'content';
+                newNewsPage.innerHTML = `
+                    <div class="news-detail">
+                        <img src="${newsItem.image}" alt="${category}">
+                        <h3>${title}</h3>
+                        <p>${content}</p>
+                        <div class="button-group">
+                            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                            <button class="delete-btn" onclick="deleteNews('${newNewsId}')">Hapus Berita</button>
                         </div>
-                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
-                    `;
-                    newsItems.insertBefore(newNewsItem, newsItems.firstChild);
+                    </div>
+                `;
+                document.body.appendChild(newNewsPage);
 
-                    const newNewsPage = document.createElement('div');
-                    newNewsPage.id = newNewsId;
-                    newNewsPage.className = 'content';
-                    newNewsPage.innerHTML = `
-                        <div class="news-detail">
-                            <img src="https://via.placeholder.com/800x300?text=${category.charAt(0).toUpperCase() + category.slice(1)}" alt="${category}">
-                            <h3>${title}</h3>
-                            <p>${content}</p>
-                            <div class="button-group">
-                                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
-                                <button class="delete-btn" onclick="deleteNews('${newNewsId}')">Hapus Berita</button>
-                            </div>
-                        </div>
-                    `;
-                    document.body.appendChild(newNewsPage);
-
-                    document.getElementById('add-news-form').reset();
-                    toggleAddNewsForm();
-                    alert('Berita berhasil ditambahkan!');
-                    showPage('news-list');
-                    loadAdminNewsList();
-                    updateDeleteButtonsVisibility();
-                } else {
-                    console.error('Element with ID "news-items" not found.');
-                }
+                document.getElementById('add-news-form').reset();
+                toggleAddNewsForm();
+                alert('Berita berhasil ditambahkan!');
+                showPage('news-list');
+                loadAdminNewsList();
+                updateDeleteButtonsVisibility();
             } else {
-                alert('Judul dan isi berita harus diisi!');
+                console.error('Element with ID "news-items" not found.');
             }
         }
 
@@ -942,7 +949,7 @@
                     newNewsItem.className = 'news-item';
                     newNewsItem.onclick = () => showPage(news.id);
                     newNewsItem.innerHTML = `
-                        <img src="https://via.placeholder.com/24?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}" alt="${news.category}">
+                        <img src="${news.image || `https://via.placeholder.com/24?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}`}" alt="${news.category}">
                         <div class="info">
                             <span class="category">${news.category.charAt(0).toUpperCase() + news.category.slice(1)}</span>
                             <span class="date">${news.dateTime}</span>
@@ -959,7 +966,7 @@
                         newNewsPage.className = 'content';
                         newNewsPage.innerHTML = `
                             <div class="news-detail">
-                                <img src="https://via.placeholder.com/800x300?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}" alt="${news.category}">
+                                <img src="${news.image || `https://via.placeholder.com/800x300?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}`}" alt="${news.category}">
                                 <h3>${news.title}</h3>
                                 <p>${news.content}</p>
                                 <div class="button-group">
