@@ -1,0 +1,908 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FN | Fullstate Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header .nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+        .header .nav a:hover {
+            color: #facc15;
+        }
+        .header .nav a.active {
+            color: #facc15;
+            border-bottom: 2px solid #facc15;
+        }
+        .header .search {
+            display: flex;
+            align-items: center;
+        }
+        .header .search input {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 20px 0 0 20px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        .header .search button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #facc15;
+            color: #1e3a8a;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .header .search button:hover {
+            background: #eab308;
+        }
+        .content {
+            display: none;
+            padding: 4rem 2rem;
+            text-align: center;
+            flex: 1 0 auto;
+        }
+        .content.active {
+            display: block;
+        }
+        .hero {
+            background: #000000;
+            color: white;
+            text-align: center;
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        .hero .buttons button {
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hero .buttons .check-btn {
+            background: #3b82f6;
+            color: white;
+        }
+        .hero .buttons button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .services {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        .services h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+        .services .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .services .card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .services .card:hover {
+            transform: translateY(-5px);
+        }
+        .services .card img {
+            width: 60px;
+            margin-bottom: 1rem;
+        }
+        .services .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #1e3a8a;
+        }
+        .services .card p {
+            font-size: 1rem;
+            color: #666;
+        }
+        .news-list {
+            padding: 4rem 2rem;
+            text-align: center;
+            background: #e6effb;
+        }
+        .news-list h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e3a8a;
+        }
+        .news-list .news-items {
+            display: block;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .news-item {
+            display: flex;
+            align-items: flex-start;
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .news-item:hover {
+            transform: translateY(-3px);
+        }
+        .news-item img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 0.5rem;
+            margin-top: 0.2rem;
+        }
+        .news-item .info {
+            text-align: left;
+        }
+        .news-item .info span.category {
+            font-size: 0.8rem;
+            color: #1e3a8a;
+            margin-bottom: 0.2rem;
+            display: block;
+        }
+        .news-item .info span.date {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.2rem;
+            display: block;
+        }
+        .news-item .info h3 {
+            font-size: 1.2rem;
+            color: #1e3a8a;
+            margin-bottom: 0.3rem;
+        }
+        .news-item .info p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .news-detail {
+            padding: 4rem 2rem;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .news-detail .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-align: left;
+            width: fit-content;
+        }
+        .news-detail .back-btn:hover {
+            background: #2563eb;
+        }
+        .news-detail img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .news-detail h3 {
+            font-size: 1.8rem;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        .news-detail p {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.8;
+            text-align: left;
+        }
+        .admin {
+            padding: 4rem 2rem;
+            text-align: center;
+            background: #e6effb;
+        }
+        .admin h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e3a8a;
+        }
+        .admin .add-news {
+            display: none;
+            margin-bottom: 2rem;
+            text-align: left;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .admin .add-news.active {
+            display: block;
+        }
+        .admin .add-news select, .admin .add-news input, .admin .add-news textarea {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+        .admin .add-news button {
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .admin .add-news button:hover {
+            background: #2563eb;
+        }
+        .profile, .community {
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .profile h2, .community h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1e3a8a;
+        }
+        .profile p, .community p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #666;
+        }
+        #login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #login-modal.active {
+            display: flex;
+        }
+        .login-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .login-content h3 {
+            margin-bottom: 1rem;
+            color: #1e3a8a;
+        }
+        .login-content input {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+        .login-content button {
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .login-content button:hover {
+            background: #2563eb;
+        }
+        .close-btn {
+            margin-top: 1rem;
+            color: #666;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .footer {
+            background: #1e3a8a;
+            color: white;
+            padding: 2rem;
+            text-align: left;
+            flex-shrink: 0;
+        }
+        .footer .footer-content {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        .footer .footer-section {
+            margin-bottom: 1rem;
+        }
+        .footer .footer-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .footer .footer-section ul {
+            list-style: none;
+        }
+        .footer .footer-section ul li {
+            margin-bottom: 0.3rem;
+        }
+        .footer .footer-section ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .footer .footer-section ul li a:hover {
+            text-decoration: underline;
+        }
+        .footer .footer-section ul li a.button {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-align: left;
+            width: fit-content;
+        }
+        .footer .footer-section ul li a.button:hover {
+            background: #2563eb;
+            text-decoration: none;
+        }
+        .footer .footer-bottom {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">FN | Fullstate Network</div>
+        <div class="nav" id="nav-links">
+            <a onclick="showPage('home')" class="active">Beranda</a>
+            <a onclick="showPage('profile')">Profil</a>
+            <a onclick="showPage('news-list')">Berita</a>
+            <a onclick="showPage('community')">Komunitas</a>
+        </div>
+        <div class="search">
+            <input type="text" placeholder="Cari Berita...">
+            <button>🔍</button>
+        </div>
+    </div>
+    <div id="home" class="content active">
+        <div class="hero">
+            <h1>SELALU UPDATE SETIAP MINGGU</h1>
+            <p>Fullstate Network adalah platform terpercaya yang menyiarkan berita di Fullstate, memberikan informasi terkini setiap minggu.</p>
+            <div class="buttons">
+                <button id="check-news-btn" class="check-btn" onclick="showPage('news-list')">Cek Berita Terbaru</button>
+            </div>
+        </div>
+        <div class="services">
+            <h2>LAYANAN BERITA</h2>
+            <div class="grid">
+                <div class="card">
+                    <img src="https://via.placeholder.com/60" alt="Icon">
+                    <h3>BERITA MINGGUAN</h3>
+                    <p>Akses berita terbaru setiap minggu dengan cepat dan mudah.</p>
+                </div>
+                <div class="card">
+                    <img src="https://via.placeholder.com/60" alt="Icon">
+                    <h3>LIVE UPDATE</h3>
+                    <p>Dapatkan pembaruan berita langsung dengan proses yang efisien.</p>
+                </div>
+                <div class="card">
+                    <img src="https://via.placeholder.com/60" alt="Icon">
+                    <h3>ARSIP BERITA</h3>
+                    <p>Akses arsip berita melalui platform digital kami.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="profile" class="content">
+        <div class="profile">
+            <h2>Profil Fullstate Network</h2>
+            <p>Fullstate Network adalah penyiar berita terkemuka di Fullstate, berkomitmen untuk menyampaikan informasi yang akurat dan terpercaya. Kami telah melayani masyarakat sejak 2020, dengan tim jurnalis berpengalaman yang berdedikasi untuk mengungkap kebenaran.</p>
+        </div>
+    </div>
+    <div id="news-list" class="content">
+        <h2>Berita Terkini</h2>
+        <div class="news-items" id="news-items">
+            <div class="news-item" onclick="showPage('accident')">
+                <img src="https://via.placeholder.com/24?text=Kecelakaan" alt="Kecelakaan">
+                <div class="info">
+                    <span class="category">Kecelakaan</span>
+                    <span class="date">Selasa, 08:00 WIB, 13 Mei 2025</span>
+                    <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
+                    <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama...</p>
+                </div>
+            </div>
+            <div class="news-item" onclick="showPage('politics')">
+                <img src="https://via.placeholder.com/24?text=Politik" alt="Politik">
+                <div class="info">
+                    <span class="category">Politik</span>
+                    <span class="date">Selasa, 09:00 WIB, 13 Mei 2025</span>
+                    <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
+                    <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025...</p>
+                </div>
+            </div>
+            <div class="news-item" onclick="showPage('sports')">
+                <img src="https://via.placeholder.com/24?text=Olahraga" alt="Olahraga">
+                <div class="info">
+                    <span class="category">Olahraga</span>
+                    <span class="date">Selasa, 10:00 WIB, 13 Mei 2025</span>
+                    <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
+                    <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="accident" class="content">
+        <div class="news-detail">
+            <img src="https://via.placeholder.com/800x300?text=Kecelakaan" alt="Kecelakaan">
+            <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
+            <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama Fullstate yang melibatkan tiga kendaraan. Insiden ini menyebabkan dua orang luka ringan dan arus lalu lintas terhambat selama beberapa jam. Menurut laporan awal, kecelakaan ini terjadi akibat kelalaian pengemudi yang tidak menjaga jarak aman. Pihak berwenang sedang menyelidiki lebih lanjut untuk menentukan penyebab pasti.</p>
+            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+        </div>
+    </div>
+    <div id="politics" class="content">
+        <div class="news-detail">
+            <img src="https://via.placeholder.com/800x300?text=Politik" alt="Politik">
+            <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
+            <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025. Beberapa kandidat telah mengajukan diri, termasuk tokoh terkenal yang telah lama berkontribusi dalam politik lokal. Kampanye diperkirakan akan berlangsung sengit, dengan fokus pada isu ekonomi dan infrastruktur. Warga Fullstate diharapkan berpartisipasi aktif dalam proses demokrasi ini.</p>
+            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+        </div>
+    </div>
+    <div id="sports" class="content">
+        <div class="news-detail">
+            <img src="https://via.placeholder.com/800x300?text=Olahraga" alt="Olahraga">
+            <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
+            <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu pada pertandingan terakhir mereka di Stadion Utama Fullstate, 13 Mei 2025. Gol-gol dari pemain bintang mereka membawa tim ini naik ke peringkat atas klasemen sementara. Pelatih menyatakan bahwa tim akan terus berlatih keras untuk mempertahankan performa mereka di laga berikutnya.</p>
+            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+        </div>
+    </div>
+    <div id="community" class="content">
+        <div class="community">
+            <h2>Komunitas Fullstate Network</h2>
+            <p>Bergabunglah dengan komunitas kami untuk berbagi cerita, diskusi, dan informasi. Fullstate Network mendukung komunitas yang aktif dan terhubung, tempat Anda bisa berpartisipasi dalam berbagai kegiatan sosial dan jurnalisme warga.</p>
+        </div>
+    </div>
+    <div id="admin" class="content">
+        <div class="admin">
+            <h2>Panel Admin</h2>
+            <div class="add-news">
+                <button onclick="toggleAddNewsForm()">Tambah Berita</button>
+                <form id="add-news-form" style="display: none;">
+                    <select name="category" id="news-category">
+                        <option value="accident">Kecelakaan</option>
+                        <option value="politics">Politik</option>
+                        <option value="sports">Olahraga</option>
+                    </select>
+                    <input type="text" id="news-title" placeholder="Judul Berita" required>
+                    <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
+                    <button type="submit">Tambah Berita</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal">
+        <div class="login-content">
+            <h3>Login Admin</h3>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <div class="close-btn" onclick="closeLoginModal()">Tutup</div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Tautan</h4>
+                <ul>
+                    <li><a href="#" class="button" onclick="showLoginModal()">Login Admin</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Jam Operasional</h4>
+                <ul>
+                    <li>Senin - Minggu: 15:00 - 21:30</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Alamat</h4>
+                <ul>
+                    <li>Lorem Ipsum Dolor Sit Amet</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            ©2025 FN | Fullstate Network<br>
+        </div>
+    </footer>
+
+    <script>
+        let isLoggedIn = false;
+        let newsCounter = 0;
+        let newsData = [];
+
+        function showPage(pageId) {
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const contentSection = document.getElementById(pageId);
+            if (contentSection) {
+                contentSection.classList.add('active');
+            } else {
+                console.error(`Element with ID ${pageId} not found.`);
+                return;
+            }
+            document.querySelectorAll('.nav a').forEach(link => {
+                link.classList.remove('active');
+            });
+            const navLinks = document.querySelectorAll('.nav a');
+            let foundLink = false;
+            navLinks.forEach(link => {
+                const onclickAttr = link.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`showPage('${pageId}')`)) {
+                    link.classList.add('active');
+                    foundLink = true;
+                }
+            });
+            if (!foundLink) {
+                console.warn(`No navigation link found for page ${pageId}.`);
+            }
+            const checkNewsBtn = document.getElementById('check-news-btn');
+            if (checkNewsBtn && pageId === 'news-list' && sessionStorage.getItem('fromOtherPage') === 'true') {
+                checkNewsBtn.textContent = 'Kembali';
+                checkNewsBtn.onclick = () => showPage('home');
+                sessionStorage.removeItem('fromOtherPage');
+            } else if (checkNewsBtn && pageId === 'home') {
+                checkNewsBtn.textContent = 'Cek Berita Terbaru';
+                checkNewsBtn.onclick = () => {
+                    sessionStorage.setItem('fromOtherPage', 'true');
+                    showPage('news-list');
+                };
+            }
+            if (isLoggedIn && pageId === 'admin') {
+                document.querySelector('#admin .add-news').classList.add('active');
+            } else {
+                document.querySelectorAll('.add-news').forEach(el => el.classList.remove('active'));
+            }
+            if (pageId === 'news-list') {
+                loadNews();
+            }
+            updateNavigation();
+        }
+
+        function showLoginModal() {
+            const modal = document.getElementById('login-modal');
+            modal.classList.add('active');
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById('login-modal');
+            modal.classList.remove('active');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === 'FULLSTATENETWORK' && password === 'FULLSTATENETWORKJAYASELAMANYA') {
+                alert('Login berhasil! Selamat datang, Admin!');
+                isLoggedIn = true;
+                closeLoginModal();
+                showPage('admin');
+            } else {
+                alert('Username atau password salah!');
+            }
+        }
+
+        function toggleAddNewsForm() {
+            const form = document.getElementById('add-news-form');
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function formatDateTime() {
+            const now = new Date();
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const day = days[now.getDay()];
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const date = now.getDate();
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            return `${day}, ${hours}:${minutes} WIB, ${date} ${month} ${year}`;
+        }
+
+        function addNews(event) {
+            event.preventDefault();
+            const category = document.getElementById('news-category').value;
+            const title = document.getElementById('news-title').value;
+            const content = document.getElementById('news-content').value;
+
+            if (title && content) {
+                newsCounter++;
+                const newNewsId = `news-${newsCounter}`;
+                const dateTime = formatDateTime();
+
+                const newsItem = {
+                    id: newNewsId,
+                    category: category,
+                    title: title,
+                    content: content,
+                    dateTime: dateTime
+                };
+
+                newsData.push(newsItem);
+                localStorage.setItem('newsData', JSON.stringify(newsData));
+
+                const newsItems = document.getElementById('news-items');
+                if (newsItems) {
+                    const newNewsItem = document.createElement('div');
+                    newNewsItem.className = 'news-item';
+                    newNewsItem.onclick = () => showPage(newNewsId);
+                    newNewsItem.innerHTML = `
+                        <img src="https://via.placeholder.com/24?text=${category.charAt(0).toUpperCase() + category.slice(1)}" alt="${category}">
+                        <div class="info">
+                            <span class="category">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                            <span class="date">${dateTime}</span>
+                            <h3>${title}</h3>
+                            <p>${content.substring(0, 50)}...</p>
+                        </div>
+                    `;
+                    newsItems.insertBefore(newNewsItem, newsItems.firstChild);
+
+                    const newNewsPage = document.createElement('div');
+                    newNewsPage.id = newNewsId;
+                    newNewsPage.className = 'content';
+                    newNewsPage.innerHTML = `
+                        <div class="news-detail">
+                            <img src="https://via.placeholder.com/800x300?text=${category.charAt(0).toUpperCase() + category.slice(1)}" alt="${category}">
+                            <h3>${title}</h3>
+                            <p>${content}</p>
+                            <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                        </div>
+                    `;
+                    document.body.appendChild(newNewsPage);
+
+                    document.getElementById('add-news-form').reset();
+                    toggleAddNewsForm();
+                    alert('Berita berhasil ditambahkan!');
+                    showPage('news-list');
+                } else {
+                    console.error('Element with ID "news-items" not found.');
+                }
+            } else {
+                alert('Judul dan isi berita harus diisi!');
+            }
+        }
+
+        function loadNews() {
+            const storedNews = localStorage.getItem('newsData');
+            if (storedNews) {
+                newsData = JSON.parse(storedNews);
+                const newsItems = document.getElementById('news-items');
+                newsItems.innerHTML = `
+                    <div class="news-item" onclick="showPage('accident')">
+                        <img src="https://via.placeholder.com/24?text=Kecelakaan" alt="Kecelakaan">
+                        <div class="info">
+                            <span class="category">Kecelakaan</span>
+                            <span class="date">Selasa, 08:00 WIB, 13 Mei 2025</span>
+                            <h3>Kecelakaan Beruntun di Jalan Utama Fullstate</h3>
+                            <p>Pada hari Selasa, 13 Mei 2025, terjadi kecelakaan beruntun di Jalan Utama...</p>
+                        </div>
+                    </div>
+                    <div class="news-item" onclick="showPage('politics')">
+                        <img src="https://via.placeholder.com/24?text=Politik" alt="Politik">
+                        <div class="info">
+                            <span class="category">Politik</span>
+                            <span class="date">Selasa, 09:00 WIB, 13 Mei 2025</span>
+                            <h3>Pemilihan Gubernur Fullstate Dimulai</h3>
+                            <p>Pemilihan Gubernur Fullstate resmi dimulai pada 13 Mei 2025...</p>
+                        </div>
+                    </div>
+                    <div class="news-item" onclick="showPage('sports')">
+                        <img src="https://via.placeholder.com/24?text=Olahraga" alt="Olahraga">
+                        <div class="info">
+                            <span class="category">Olahraga</span>
+                            <span class="date">Selasa, 10:00 WIB, 13 Mei 2025</span>
+                            <h3>Tim Fullstate FC Menang di Laga Terakhir</h3>
+                            <p>Fullstate FC meraih kemenangan telak 3-1 melawan tim tamu...</p>
+                        </div>
+                    </div>
+                `;
+                newsData.forEach(news => {
+                    const newNewsItem = document.createElement('div');
+                    newNewsItem.className = 'news-item';
+                    newNewsItem.onclick = () => showPage(news.id);
+                    newNewsItem.innerHTML = `
+                        <img src="https://via.placeholder.com/24?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}" alt="${news.category}">
+                        <div class="info">
+                            <span class="category">${news.category.charAt(0).toUpperCase() + news.category.slice(1)}</span>
+                            <span class="date">${news.dateTime}</span>
+                            <h3>${news.title}</h3>
+                            <p>${news.content.substring(0, 50)}...</p>
+                        </div>
+                    `;
+                    newsItems.insertBefore(newNewsItem, newsItems.firstChild);
+
+                    if (!document.getElementById(news.id)) {
+                        const newNewsPage = document.createElement('div');
+                        newNewsPage.id = news.id;
+                        newNewsPage.className = 'content';
+                        newNewsPage.innerHTML = `
+                            <div class="news-detail">
+                                <img src="https://via.placeholder.com/800x300?text=${news.category.charAt(0).toUpperCase() + news.category.slice(1)}" alt="${news.category}">
+                                <h3>${news.title}</h3>
+                                <p>${news.content}</p>
+                                <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
+                            </div>
+                        `;
+                        document.body.appendChild(newNewsPage);
+                    }
+                });
+                newsCounter = newsData.length;
+            }
+        }
+
+        function updateNavigation() {
+            const nav = document.getElementById('nav-links');
+            if (isLoggedIn) {
+                if (!nav.querySelector('a[onclick="showPage(\'admin\')"]')) {
+                    const adminLink = document.createElement('a');
+                    adminLink.textContent = 'Admin';
+                    adminLink.setAttribute('onclick', "showPage('admin')");
+                    nav.appendChild(adminLink);
+                }
+            } else {
+                const adminLink = nav.querySelector('a[onclick="showPage(\'admin\')"]');
+                if (adminLink) {
+                    nav.removeChild(adminLink);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('add-news-form');
+            if (form) {
+                form.addEventListener('submit', addNews);
+            } else {
+                console.error('Form with ID "add-news-form" not found.');
+            }
+            loadNews();
+            showPage('home');
+            updateNavigation();
+        });
+    </script>
+</body>
+</html>
