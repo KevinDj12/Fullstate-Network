@@ -780,10 +780,11 @@
                     <select name="category" id="news-category" required>
                         <option value="" disabled selected>Pilih Kategori</option>
                         <option value="accident">Kecelakaan</option>
-                        <option value="politics">Politik</option>
-                        <option value="sports">Olahraga</option>
+                        <option value="politic">Politik</option>
+                        <option value="sport">Olahraga</option>
                         <option value="art">Seni</option>
                         <option value="information">Informasi</option>
+                        <option value="fight">Perang/Pertempuran</option>
                     </select>
                     <input type="text" id="news-title" placeholder="Judul Berita" required>
                     <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
@@ -877,8 +878,11 @@
         // Pemetaan kategori dari bahasa Inggris ke bahasa Indonesia
         const categoryTranslations = {
             'accident': 'Kecelakaan',
-            'politics': 'Politik',
-            'sports': 'Olahraga'
+            'politic': 'Politik',
+            'sport': 'Olahraga',
+            'art': 'Seni',
+            'information': 'Informasi',
+            'fight': 'Perang/Pertempuran'
         };
 
         function getTranslatedCategory(category) {
