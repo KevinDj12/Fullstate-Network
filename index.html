@@ -77,6 +77,10 @@
             font-weight: 700;
             letter-spacing: 1px;
         }
+        .header .nav {
+            display: flex;
+            align-items: center;
+        }
         .header .nav a {
             color: white;
             text-decoration: none;
@@ -91,6 +95,15 @@
         .header .nav a.active {
             color: #facc15;
             border-bottom: 2px solid #facc15;
+        }
+        .header .menu-toggle {
+            display: none; /* Sembunyikan di desktop */
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        .header .nav-menu {
+            display: flex;
         }
         .header .search {
             display: flex;
@@ -206,6 +219,52 @@
         .services .card p {
             font-size: 1rem;
             color: #666;
+        }
+        .announcements {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        .announcements h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+        .announcements .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .announcements .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .announcements .card:hover {
+            transform: translateY(-5px);
+        }
+        .announcements .card img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            max-height: 400px;
+        }
+        .announcements .card p {
+            font-size: 1.1rem;
+            color: #666;
+            line-height: 1.6;
+            word-wrap: break-word; /* Memastikan teks tidak melebar */
+            overflow-wrap: break-word; /* Versi modern dari word-wrap */
+            word-break: break-word; /* Memecah kata panjang jika perlu */
+            max-width: 100%; /* Membatasi lebar teks */
+            text-align: center; /* Tetap rata tengah */
         }
         .news-list {
             padding: 4rem 2rem;
@@ -614,6 +673,34 @@
             color: #666;
             margin-top: 0.5rem;
         }
+
+        /* Media Query untuk Mobile */
+        @media (max-width: 768px) {
+            .header .nav-menu {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #000000;
+                padding: 1rem;
+                text-align: center;
+            }
+            .header .nav-menu.active {
+                display: flex;
+            }
+            .header .nav a {
+                margin: 0.5rem 0;
+                display: block;
+            }
+            .header .menu-toggle {
+                display: block;
+            }
+            .header .search {
+                display: none; /* Sembunyikan search di mobile */
+            }
+        }
     </style>
     <!-- Tambahkan script untuk XLSX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -661,11 +748,14 @@
 <body>
     <div class="header">
         <div class="logo">FN | Fullstate Network</div>
-        <div class="nav" id="nav-links">
-            <a onclick="showPage('home')" class="active">Beranda</a>
-            <a onclick="showPage('profile')">Profil</a>
-            <a onclick="showPage('news-list')">Berita</a>
-            <a onclick="showPage('community')">Komunitas</a>
+        <div class="nav" id="nav">
+            <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+            <div class="nav-menu" id="nav-menu">
+                <a onclick="showPage('home')" class="active">Beranda</a>
+                <a onclick="showPage('profile')">Profil</a>
+                <a onclick="showPage('news-list')">Berita</a>
+                <a onclick="showPage('community')">Komunitas</a>
+            </div>
         </div>
         <div class="search">
             <input type="text" placeholder="Cari Berita...">
@@ -697,6 +787,19 @@
                     <img src="Arsip Berita.png" alt="Arsip Berita">
                     <h3>ARSIP BERITA</h3>
                     <p>Akses arsip berita melalui platform digital kami.</p>
+                </div>
+            </div>
+        </div>
+        <div class="announcements">
+            <h2>PENGUMUMAN</h2>
+            <div class="grid">
+                <div class="card">
+                    <img src="Pengumuman\Pengumuman1.png" alt="Pengumuman 1">
+                    <p>Pengumuman penting mengenai jadwal siaran baru Fullstate Network. Silakan periksa detail lebih lanjut!</p>
+                </div>
+                <div class="card">
+                    <img src="Pengumuman\Pengumuman2.png" alt="Pengumuman 2">
+                    <p>Pembukaan lowongan kerja untuk posisi jurnalis. Daftar sekarang untuk bergabung dengan tim kami!</p>
                 </div>
             </div>
         </div>
@@ -756,15 +859,15 @@
             <div class="gallery">
                 <h2>Galeri</h2>
                 <div class="grid">
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+1" alt="Gambar 1"><p>Deskripsi Gambar 1</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+2" alt="Gambar 2"><p>Deskripsi Gambar 2</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+3" alt="Gambar 3"><p>Deskripsi Gambar 3</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+4" alt="Gambar 4"><p>Deskripsi Gambar 4</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+5" alt="Gambar 5"><p>Deskripsi Gambar 5</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+6" alt="Gambar 6"><p>Deskripsi Gambar 6</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+7" alt="Gambar 7"><p>Deskripsi Gambar 7</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+8" alt="Gambar 8"><p>Deskripsi Gambar 8</p></div>
-                    <div class="card"><img src="https://via.placeholder.com/300x200?text=Gambar+9" alt="Gambar 9"><p>Deskripsi Gambar 9</p></div>
+                    <div class="card"><img src="Galeri\Gambar1.png" alt="Gambar 1"><p>Deskripsi Gambar 1</p></div>
+                    <div class="card"><img src="Galeri\Gambar2.png" alt="Gambar 2"><p>Deskripsi Gambar 2</p></div>
+                    <div class="card"><img src="Galeri\Gambar3.png" alt="Gambar 3"><p>Deskripsi Gambar 3</p></div>
+                    <div class="card"><img src="Galeri\Gambar4.png" alt="Gambar 4"><p>Deskripsi Gambar 4</p></div>
+                    <div class="card"><img src="Galeri\Gambar5.png" alt="Gambar 5"><p>Deskripsi Gambar 5</p></div>
+                    <div class="card"><img src="Galeri\Gambar6.png" alt="Gambar 6"><p>Deskripsi Gambar 6</p></div>
+                    <div class="card"><img src="Galeri\Gambar7.png" alt="Gambar 7"><p>Deskripsi Gambar 7</p></div>
+                    <div class="card"><img src="Galeri\Gambar8.png" alt="Gambar 8"><p>Deskripsi Gambar 8</p></div>
+                    <div class="card"><img src="Galeri\Gambar9.png" alt="Gambar 9"><p>Deskripsi Gambar 9</p></div>
                 </div>
             </div>
             <h2>Komunitas Fullstate Network</h2>
@@ -969,6 +1072,10 @@
             }
             updateNavigation();
             updateDeleteButtonsVisibility();
+            // Tutup menu mobile setelah memilih halaman
+            if (window.innerWidth <= 768) {
+                toggleMenu();
+            }
         }
 
         function showNewsDetail(newsId) {
@@ -1117,7 +1224,7 @@
                     newNewsItem.className = 'news-item';
                     newNewsItem.onclick = () => showNewsDetail(newNewsId);
                     newNewsItem.innerHTML = `
-                        <img src="${imageUrl}" alt="${getTranslatedCategory(category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/24?text=${getTranslatedCategory(category)}';">
+                        <img src="${imageUrl}" alt="${getTranslatedCategory(category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/24?text=${getTranslatedCategory(news.category)}';">
                         <div class="info">
                             <span class="category">${getTranslatedCategory(category)}</span>
                             <span class="date">${dateTime}</span>
@@ -1315,6 +1422,15 @@
             updateDeleteButtonsVisibility();
             alert('Logout berhasil!');
             showPage('home');
+        }
+
+        function toggleMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            if (navMenu) {
+                navMenu.classList.toggle('active');
+            } else {
+                console.error('Nav menu element not found.');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
