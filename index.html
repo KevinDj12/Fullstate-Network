@@ -159,7 +159,7 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .hero .buttons .check-btn {
-            background: #3b82f6;
+            background: #c80000;
             color: white;
         }
         .hero .buttons button:hover {
@@ -394,7 +394,7 @@
         }
         .admin .add-news button {
             padding: 0.5rem 1rem;
-            background: #3b82f6;
+            background: #c80000;
             color: white;
             border: none;
             border-radius: 20px;
@@ -402,7 +402,7 @@
             transition: background 0.3s ease;
         }
         .admin .add-news button:hover {
-            background: #2563eb;
+            background: #960000;
         }
         .admin .news-list {
             max-width: 800px;
@@ -510,7 +510,7 @@
         }
         .login-content button {
             padding: 0.5rem 1rem;
-            background: #3b82f6;
+            background: #c80000;
             color: white;
             border: none;
             border-radius: 5px;
@@ -518,7 +518,7 @@
             transition: background 0.3s ease;
         }
         .login-content button:hover {
-            background: #2563eb;
+            background: #960000;
         }
         .close-btn {
             margin-top: 1rem;
@@ -565,7 +565,7 @@
         .footer .footer-section ul li a.button {
             display: inline-block;
             padding: 0.5rem 1rem;
-            background: #3b82f6;
+            background: #c80000;
             color: white;
             text-decoration: none;
             border-radius: 20px;
@@ -574,7 +574,7 @@
             width: fit-content;
         }
         .footer .footer-section ul li a.button:hover {
-            background: #2563eb;
+            background: #960000;
             text-decoration: none;
         }
         .footer .footer-bottom {
@@ -786,6 +786,7 @@
                         <option value="information">Informasi</option>
                         <option value="fight">Perang/Pertempuran</option>
                         <option value="traffic">Lalu Lintas</option>
+                        <option value="other">Lainnya</option>
                     </select>
                     <input type="text" id="news-title" placeholder="Judul Berita" required>
                     <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
@@ -885,7 +886,8 @@
             'art': 'Seni',
             'information': 'Informasi',
             'fight': 'Perang/Pertempuran',
-            'traffic': 'Lalu Lintas'
+            'traffic': 'Lalu Lintas',
+			'other': 'Lainnya'
         };
 
         function getTranslatedCategory(category) {
