@@ -790,11 +790,16 @@
                     </select>
                     <input type="text" id="news-title" placeholder="Judul Berita" required>
                     <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
-                    <input type="text" id="news-image-url" placeholder="Masukkan Direct Link dari Imgbox (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg)" required>
-                    <p>Cara mendapatkan Direct Link dari Imgbox:<br>
+                    <input type="text" id="news-image-url" placeholder="Masukkan Direct Link dari Imgbox atau Imgur (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg atau https://i.imgur.com/abcd123.jpg)" required>
+                    <p>Cara mendapatkan Direct Link:<br>
+                    <strong>Imgbox:</strong><br>
                     1. Buka situs Imgbox (cari "Imgbox image hosting" di mesin pencari).<br>
                     2. Klik "Upload" dan pilih gambar dari perangkat Anda (maksimal 10 MB).<br>
                     3. Setelah selesai, salin "Direct Link" (biasanya berakhiran .jpg atau .png).<br>
+                    <strong>Imgur:</strong><br>
+                    1. Buka situs Imgur (cari "Imgur image hosting" di mesin pencari).<br>
+                    2. Klik "New Post" atau "Upload" dan pilih gambar dari perangkat Anda.<br>
+                    3. Setelah diunggah, klik kanan pada gambar dan pilih "Copy Image Address" atau salin link langsung (biasanya berakhiran .jpg atau .png).<br>
                     4. Tempelkan tautan tersebut di kolom ini.</p>
                     <button type="submit">Kirim Berita</button>
                 </form>
@@ -887,7 +892,7 @@
             'information': 'Informasi',
             'fight': 'Perang/Pertempuran',
             'traffic': 'Lalu Lintas',
-			'other': 'Lainnya'
+            'other': 'Lainnya'
         };
 
         function getTranslatedCategory(category) {
@@ -1080,10 +1085,13 @@
                 return;
             }
 
-            // Validasi URL gambar lebih ketat
+            // Validasi URL gambar untuk Imgbox atau Imgur
             imageUrl = imageUrl.trim();
-            if (!imageUrl.includes('imgbox.com') || !/\.(jpg|jpeg|png|gif)$/i.test(imageUrl)) {
-                alert('Harap masukkan Direct Link yang valid dari Imgbox (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg). Pastikan URL berakhiran .jpg, .jpeg, .png, atau .gif.');
+            const isImgbox = imageUrl.includes('imgbox.com');
+            const isImgur = imageUrl.includes('imgur.com');
+            
+            if (!(isImgbox || isImgur) || !/\.(jpg|jpeg|png|gif)$/i.test(imageUrl)) {
+                alert('Harap masukkan Direct Link yang valid dari Imgbox atau Imgur (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg atau https://i.imgur.com/abcd123.jpg). Pastikan URL berakhiran .jpg, .jpeg, .png, atau .gif.');
                 return;
             }
 
