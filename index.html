@@ -43,7 +43,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FN | Fullstate Network</title>
-    <!-- Tambahkan favicon -->
     <link rel="icon" type="image/x-icon" href="Fullstate Network.ico">
     <style>
         * {
@@ -97,7 +96,7 @@
             border-bottom: 2px solid #facc15;
         }
         .header .menu-toggle {
-            display: none; /* Sembunyikan di desktop */
+            display: none;
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0.5rem;
@@ -260,11 +259,11 @@
             font-size: 1.1rem;
             color: #666;
             line-height: 1.6;
-            word-wrap: break-word; /* Memastikan teks tidak melebar */
-            overflow-wrap: break-word; /* Versi modern dari word-wrap */
-            word-break: break-word; /* Memecah kata panjang jika perlu */
-            max-width: 100%; /* Membatasi lebar teks */
-            text-align: center; /* Tetap rata tengah */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            max-width: 100%;
+            text-align: center;
         }
         .news-list {
             padding: 4rem 2rem;
@@ -507,16 +506,16 @@
         .admin .logout-btn:hover {
             background: #dc2626;
         }
-        .profile, .community {
+        .profile, .community, .recruitment {
             padding: 4rem 2rem;
             text-align: center;
         }
-        .profile h2, .community h2 {
+        .profile h2, .community h2, .recruitment h2 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
             color: #1e3a8a;
         }
-        .profile p, .community p {
+        .profile p, .community p, .recruitment p {
             font-size: 1.2rem;
             max-width: 800px;
             margin: 0 auto;
@@ -530,6 +529,14 @@
         .profile .profile-highlight .news-item {
             cursor: default;
             pointer-events: none;
+        }
+        .recruitment .job-listings {
+            margin-top: 2rem;
+        }
+        .recruitment .job-listings h3 {
+            font-size: 1.8rem;
+            color: #1e3a8a;
+            margin-bottom: 1rem;
         }
         #login-modal {
             display: none;
@@ -673,8 +680,39 @@
             color: #666;
             margin-top: 0.5rem;
         }
+        .community .community-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .community .button {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+        .community .discord-btn {
+            background: #7289DA;
+        }
+        .community .discord-btn:hover {
+            background: #677BC4;
+            transform: translateY(-3px);
+        }
+        .community .roblox-btn {
+            background: #00B2FF;
+        }
+        .community .roblox-btn:hover {
+            background: #0095D8;
+            transform: translateY(-3px);
+        }
 
-        /* Media Query untuk Mobile */
         @media (max-width: 768px) {
             .header .nav-menu {
                 display: none;
@@ -698,52 +736,20 @@
                 display: block;
             }
             .header .search {
-                display: none; /* Sembunyikan search di mobile */
+                display: none;
+            }
+            .community .community-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .community .button {
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
             }
         }
     </style>
-    <!-- Tambahkan script untuk XLSX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-            return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-                try {
-                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                    var firstSheetName = workbook.SheetNames[0];
-                    var worksheet = workbook.Sheets[firstSheetName];
-
-                    // Convert sheet to JSON to filter blank rows
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                    // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                    var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                    // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                    var headerRowIndex = filteredData.findIndex((row, index) =>
-                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                    );
-                    // Fallback
-                    if (headerRowIndex === -1 || headerRowIndex > 25) {
-                        headerRowIndex = 0;
-                    }
-
-                    // Convert filtered JSON back to CSV
-                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                    return csv;
-                } catch (e) {
-                    console.error(e);
-                    return "";
-                }
-            }
-            return gk_fileData[filename] || "";
-        }
-    </script>
 </head>
 <body>
     <div class="header">
@@ -851,7 +857,6 @@
     <div id="news-list" class="content">
         <h2>Berita Terkini</h2>
         <div class="news-items" id="news-items">
-            <!-- Berita akan dimuat secara dinamis -->
         </div>
     </div>
     <div id="community" class="content">
@@ -859,19 +864,24 @@
             <div class="gallery">
                 <h2>Galeri</h2>
                 <div class="grid">
-                    <div class="card"><img src="Galeri\Gambar1.png" alt="Gambar 1"><p>Deskripsi Gambar 1</p></div>
-                    <div class="card"><img src="Galeri\Gambar2.png" alt="Gambar 2"><p>Deskripsi Gambar 2</p></div>
-                    <div class="card"><img src="Galeri\Gambar3.png" alt="Gambar 3"><p>Deskripsi Gambar 3</p></div>
-                    <div class="card"><img src="Galeri\Gambar4.png" alt="Gambar 4"><p>Deskripsi Gambar 4</p></div>
-                    <div class="card"><img src="Galeri\Gambar5.png" alt="Gambar 5"><p>Deskripsi Gambar 5</p></div>
-                    <div class="card"><img src="Galeri\Gambar6.png" alt="Gambar 6"><p>Deskripsi Gambar 6</p></div>
-                    <div class="card"><img src="Galeri\Gambar7.png" alt="Gambar 7"><p>Deskripsi Gambar 7</p></div>
-                    <div class="card"><img src="Galeri\Gambar8.png" alt="Gambar 8"><p>Deskripsi Gambar 8</p></div>
-                    <div class="card"><img src="Galeri\Gambar9.png" alt="Gambar 9"><p>Deskripsi Gambar 9</p></div>
+                    <div class="card"><img src="Galeri\Gambar1.png" alt="Gambar 1"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar2.png" alt="Gambar 2"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar3.png" alt="Gambar 3"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar4.png" alt="Gambar 4"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar5.png" alt="Gambar 5"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar6.png" alt="Gambar 6"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar7.png" alt="Gambar 7"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar8.png" alt="Gambar 8"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    <div class="card"><img src="Galeri\Gambar9.png" alt="Gambar 9"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
                 </div>
             </div>
             <h2>Komunitas Fullstate Network</h2>
             <p>Bergabunglah dengan komunitas kami untuk berbagi cerita, diskusi, dan informasi. Fullstate Network mendukung komunitas yang aktif dan terhubung, tempat Anda bisa berpartisipasi dalam berbagai kegiatan sosial dan jurnalisme warga.</p>
+            <div class="community-buttons">
+                <a href="https://discord.gg/UMcvyaMn6s" class="button discord-btn" target="_blank">Discord Fullstate Network</a>
+                <a href="https://discord.gg/kotafullstate" class="button discord-btn" target="_blank">Discord Kota Fullstate</a>
+                <a href="https://www.roblox.com/games/93242192529674/KOTA-FULLSTATE" class="button roblox-btn" target="_blank">Kota Fullstate</a>
+            </div>
         </div>
     </div>
     <div id="admin" class="content">
@@ -908,12 +918,34 @@
                 </form>
             </div>
             <div class="news-list" id="admin-news-list">
-                <!-- Berita yang dapat dihapus akan ditampilkan di sini -->
             </div>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
-
+    <div id="recruitment" class="content">
+        <div class="recruitment">
+            <h2>Rekrutmen Fullstate Network</h2>
+            <p>Bergabunglah dengan tim kami di Fullstate Network! Kami sedang mencari individu yang bersemangat dan berdedikasi untuk menjadi bagian dari penyiar berita terkemuka di Fullstate. Lihat posisi yang tersedia di bawah ini dan kirimkan lamaran Anda.</p>
+            <div class="job-listings">
+                <h3>Posisi yang Tersedia</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Jurnalis</h3>
+                        <p>Kami mencari jurnalis berpengalaman untuk meliput berita terkini di Fullstate. Kirimkan CV dan portofolio Anda ke email kami.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Editor Berita</h3>
+                        <p>Editor berita diperlukan untuk memastikan kualitas dan akurasi konten kami. Pengalaman minimal 3 tahun di bidang jurnalisme.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Desainer Grafis</h3>
+                        <p>Kami membutuhkan desainer grafis kreatif untuk membuat visual yang mendukung berita kami. Kirimkan portofolio desain Anda.</p>
+                    </div>
+                </div>
+            </div>
+            <p>Untuk melamar, silakan kirimkan CV dan surat lamaran ke <a href="mailto:recruitment@fullstatenetwork.com">recruitment@fullstatenetwork.com</a>.</p>
+        </div>
+    </div>
     <div id="login-modal">
         <div class="login-content">
             <h3>Login Admin</h3>
@@ -923,13 +955,13 @@
             <div class="close-btn" onclick="closeLoginModal()">Tutup</div>
         </div>
     </div>
-
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-section">
                 <h4>Tautan</h4>
                 <ul>
                     <li><a href="#" class="button" onclick="showLoginModal()">Login Admin</a></li>
+                    <li><a href="#" class="button" onclick="showPage('recruitment')">Recruitment</a></li>
                 </ul>
             </div>
             <div class="footer-section">
@@ -950,13 +982,9 @@
             ©2025 FN | Fullstate Network<br>
         </div>
     </footer>
-
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-
     <script>
-        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCNuLH9W-LqSkyLgZyqGzzXi_q50pb7bXQ",
             authDomain: "fullstate-network.firebaseapp.com",
@@ -966,27 +994,18 @@
             appId: "1:538971846872:web:4c7f49386e5325f8eebfad",
             measurementId: "G-4SG58WYT4G"
         };
-
-        // Inisialisasi Firebase dengan error handling
         let db;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            console.log("Firebase initialized successfully.");
         } catch (error) {
-            console.error("Failed to initialize Firebase:", error);
             alert("Gagal menginisialisasi Firebase. Fitur berita mungkin tidak berfungsi, tetapi navigasi tetap dapat digunakan.");
         }
-
-        let isLoggedIn = false; // Set default to false on page load
+        let isLoggedIn = false;
         let newsData = [];
-
-        // Periksa sessionStorage hanya untuk menentukan status awal
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
             isLoggedIn = true;
         }
-
-        // Pemetaan kategori dari bahasa Inggris ke bahasa Indonesia
         const categoryTranslations = {
             'accident': 'Kecelakaan',
             'politic': 'Politik',
@@ -997,31 +1016,24 @@
             'traffic': 'Lalu Lintas',
             'other': 'Lainnya'
         };
-
         function getTranslatedCategory(category) {
             return categoryTranslations[category.toLowerCase()] || category.charAt(0).toUpperCase() + category.slice(1);
         }
-
         function showPage(pageId) {
-            console.log(`Showing page: ${pageId}, isLoggedIn: ${isLoggedIn}`);
-            // Sembunyikan semua konten
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
-            // Tampilkan halaman yang diminta
             const contentSection = document.getElementById(pageId);
             if (contentSection) {
                 contentSection.classList.add('active');
             } else {
-                console.error(`Element with ID ${pageId} not found.`);
                 if (newsData.find(news => news.id === pageId)) {
                     showNewsDetail(pageId);
                 } else {
-                    showPage('news-list'); // Kembali ke daftar berita jika ID tidak valid
+                    showPage('news-list');
                 }
                 return;
             }
-            // Perbarui tautan navigasi aktif
             document.querySelectorAll('.nav a').forEach(link => {
                 link.classList.remove('active');
             });
@@ -1035,9 +1047,7 @@
                 }
             });
             if (!foundLink) {
-                console.warn(`No navigation link found for page ${pageId}.`);
             }
-            // Perbarui tombol "Cek Berita Terbaru" di halaman Beranda
             const checkNewsBtn = document.getElementById('check-news-btn');
             if (checkNewsBtn && pageId === 'news-list' && sessionStorage.getItem('fromOtherPage') === 'true') {
                 checkNewsBtn.textContent = 'Kembali';
@@ -1050,7 +1060,6 @@
                     showPage('news-list');
                 };
             }
-            // Logika untuk halaman admin
             if (pageId === 'admin' && !isLoggedIn) {
                 alert('Silakan login sebagai admin untuk mengakses panel ini.');
                 showPage('home');
@@ -1060,32 +1069,25 @@
                 const addNewsSection = document.querySelector('#admin .add-news');
                 if (addNewsSection) {
                     addNewsSection.classList.add('active');
-                    console.log('Admin panel should now be visible.');
                     if (db) loadAdminNewsList();
                 } else {
-                    console.error('Add news section not found in admin panel.');
                 }
             }
-            // Muat berita hanya jika di halaman news-list dan Firebase tersedia
             if (pageId === 'news-list' && db) {
                 loadNews();
             }
             updateNavigation();
             updateDeleteButtonsVisibility();
-            // Tutup menu mobile setelah memilih halaman
             if (window.innerWidth <= 768) {
                 toggleMenu();
             }
         }
-
         function showNewsDetail(newsId) {
             const news = newsData.find(n => n.id === newsId);
             if (!news) {
-                console.error(`News with ID ${newsId} not found.`);
                 showPage('news-list');
                 return;
             }
-
             let newsDetail = document.getElementById(newsId);
             if (!newsDetail) {
                 newsDetail = document.createElement('div');
@@ -1106,16 +1108,13 @@
             }
             showPage(newsId);
         }
-
         function showLoginModal() {
             const modal = document.getElementById('login-modal');
             if (modal) {
                 modal.classList.add('active');
             } else {
-                console.error('Login modal not found.');
             }
         }
-
         function closeLoginModal() {
             const modal = document.getElementById('login-modal');
             if (modal) {
@@ -1125,10 +1124,8 @@
                 if (usernameInput) usernameInput.value = '';
                 if (passwordInput) passwordInput.value = '';
             } else {
-                console.error('Login modal not found.');
             }
         }
-
         function login() {
             const username = document.getElementById('username')?.value;
             const password = document.getElementById('password')?.value;
@@ -1148,7 +1145,6 @@
                 alert('Username atau password salah!');
             }
         }
-
         function toggleAddNewsForm() {
             const form = document.getElementById('add-news-form');
             if (form) {
@@ -1158,10 +1154,8 @@
                     form.style.display = 'none';
                 }
             } else {
-                console.error('Add news form not found.');
             }
         }
-
         function formatDateTime() {
             const now = new Date();
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -1174,34 +1168,27 @@
             const year = now.getFullYear();
             return `${day}, ${hours}:${minutes} WIB, ${date} ${month} ${year}`;
         }
-
         async function addNews(event) {
             event.preventDefault();
             if (!db) {
                 alert('Firebase tidak tersedia. Tidak dapat menambahkan berita.');
                 return;
             }
-
             const category = document.getElementById('news-category')?.value;
             const title = document.getElementById('news-title')?.value;
             const content = document.getElementById('news-content')?.value;
             let imageUrl = document.getElementById('news-image-url')?.value;
-
             if (!category || !title || !content || !imageUrl) {
                 alert('Semua field harus diisi!');
                 return;
             }
-
-            // Validasi URL gambar untuk Imgbox atau Imgur
             imageUrl = imageUrl.trim();
             const isImgbox = imageUrl.includes('imgbox.com');
             const isImgur = imageUrl.includes('imgur.com');
-            
             if (!(isImgbox || isImgur) || !/\.(jpg|jpeg|png|gif)$/i.test(imageUrl)) {
                 alert('Harap masukkan Direct Link yang valid dari Imgbox atau Imgur (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg atau https://i.imgur.com/abcd123.jpg). Pastikan URL berakhiran .jpg, .jpeg, .png, atau .gif.');
                 return;
             }
-
             try {
                 const dateTime = formatDateTime();
                 const newNews = {
@@ -1212,12 +1199,9 @@
                     image: imageUrl,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
-
                 const docRef = await db.collection('news').add(newNews);
                 const newNewsId = docRef.id;
-
                 await docRef.update({ id: newNewsId });
-
                 const newsItems = document.getElementById('news-items');
                 if (newsItems) {
                     const newNewsItem = document.createElement('div');
@@ -1234,7 +1218,6 @@
                         <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
                     `;
                     newsItems.insertBefore(newNewsItem, newsItems.firstChild);
-
                     document.getElementById('add-news-form').reset();
                     toggleAddNewsForm();
                     alert('Berita berhasil ditambahkan!');
@@ -1242,39 +1225,28 @@
                     if (db) loadAdminNewsList();
                     updateDeleteButtonsVisibility();
                 } else {
-                    console.error('Element with ID "news-items" not found.');
                 }
             } catch (error) {
-                console.error('Error adding news:', error);
                 alert('Gagal menambahkan berita. Silakan coba lagi.');
             }
         }
-
         async function loadNews() {
             if (!db) {
-                console.warn('Firebase not initialized. Skipping loadNews.');
                 return;
             }
-
             const newsItems = document.getElementById('news-items');
             if (!newsItems) {
-                console.error('Element with ID "news-items" not found.');
                 return;
             }
-
             try {
                 newsItems.innerHTML = '';
-
                 const snapshot = await db.collection('news')
                     .orderBy('createdAt', 'desc')
                     .get();
-
                 newsData = [];
                 snapshot.forEach(doc => {
                     const news = doc.data();
-                    console.log('News Image URL:', news.image); // Log URL gambar untuk debugging
                     newsData.push(news);
-
                     const newNewsItem = document.createElement('div');
                     newNewsItem.className = 'news-item';
                     newNewsItem.onclick = () => showNewsDetail(news.id);
@@ -1289,7 +1261,6 @@
                         <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${news.id}')">Hapus Berita</button>
                     `;
                     newsItems.appendChild(newNewsItem);
-
                     let newsDetail = document.getElementById(news.id);
                     if (!newsDetail) {
                         newsDetail = document.createElement('div');
@@ -1311,29 +1282,22 @@
                 });
                 updateDeleteButtonsVisibility();
             } catch (error) {
-                console.error('Error loading news:', error);
                 alert('Gagal memuat berita. Periksa konsol untuk detail lebih lanjut.');
             }
         }
-
         async function loadAdminNewsList() {
             if (!db) {
-                console.warn('Firebase not initialized. Skipping loadAdminNewsList.');
                 return;
             }
-
             try {
                 const adminNewsList = document.getElementById('admin-news-list');
                 if (!adminNewsList) {
-                    console.error('Admin news list element not found.');
                     return;
                 }
-
                 adminNewsList.innerHTML = '';
                 const snapshot = await db.collection('news')
                     .orderBy('createdAt', 'desc')
                     .get();
-
                 snapshot.forEach(doc => {
                     const news = doc.data();
                     const newsItem = document.createElement('div');
@@ -1350,37 +1314,30 @@
                     adminNewsList.appendChild(newsItem);
                 });
             } catch (error) {
-                console.error('Error loading admin news list:', error);
             }
         }
-
         async function deleteNews(newsId) {
             if (!db) {
                 alert('Firebase tidak tersedia. Tidak dapat menghapus berita.');
                 return;
             }
-
             if (confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
                 try {
                     await db.collection('news').doc(newsId).delete();
-
                     const newsItem = document.querySelector(`#news-items .news-item[onclick="showNewsDetail('${newsId}')"]`);
                     if (newsItem) newsItem.remove();
                     const newsPage = document.getElementById(newsId);
                     if (newsPage) newsPage.remove();
-
                     newsData = newsData.filter(n => n.id !== newsId);
                     if (db) loadAdminNewsList();
                     if (db) loadNews();
                     alert('Berita berhasil dihapus!');
                     showPage('news-list');
                 } catch (error) {
-                    console.error('Error deleting news:', error);
                     alert('Gagal menghapus berita. Silakan coba lagi.');
                 }
             }
         }
-
         function updateDeleteButtonsVisibility() {
             const deleteButtons = document.querySelectorAll('.delete-btn');
             deleteButtons.forEach(button => {
@@ -1391,11 +1348,9 @@
                 }
             });
         }
-
         function updateNavigation() {
             const nav = document.getElementById('nav-links');
             if (!nav) {
-                console.error('Navigation element not found.');
                 return;
             }
             const existingAdminLink = nav.querySelector('a[onclick="showPage(\'admin\')"]');
@@ -1405,16 +1360,13 @@
                     adminLink.textContent = 'Admin';
                     adminLink.setAttribute('onclick', "showPage('admin')");
                     nav.appendChild(adminLink);
-                    console.log('Admin link added to navigation.');
                 }
             } else {
                 if (existingAdminLink) {
                     nav.removeChild(existingAdminLink);
-                    console.log('Admin link removed from navigation.');
                 }
             }
         }
-
         function logout() {
             isLoggedIn = false;
             sessionStorage.removeItem('isLoggedIn');
@@ -1423,38 +1375,27 @@
             alert('Logout berhasil!');
             showPage('home');
         }
-
         function toggleMenu() {
             const navMenu = document.getElementById('nav-menu');
             if (navMenu) {
                 navMenu.classList.toggle('active');
             } else {
-                console.error('Nav menu element not found.');
             }
         }
-
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM fully loaded and parsed.');
             const form = document.getElementById('add-news-form');
             if (form) {
                 form.addEventListener('submit', addNews);
             } else {
-                console.error('Form with ID "add-news-form" not found.');
             }
-            // Selalu tampilkan halaman beranda saat halaman dimuat
             showPage('home');
-            // Muat berita hanya jika Firebase tersedia
             if (db) {
                 loadNews();
             } else {
-                console.warn('Skipping loadNews because Firebase is not initialized.');
             }
             updateNavigation();
         });
-
-        // Deteksi error script loading
         window.onerror = function(message, source, lineno, colno, error) {
-            console.error(`Script error detected: ${message} at ${source}:${lineno}:${colno}`, error);
             alert('Terjadi kesalahan pada skrip. Silakan periksa konsol browser untuk detail lebih lanjut.');
         };
     </script>
