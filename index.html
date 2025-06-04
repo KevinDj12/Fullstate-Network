@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -58,6 +19,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            overflow-x: hidden; /* Mencegah scroll horizontal pada body */
         }
         .header {
             background: #000000;
@@ -127,16 +89,58 @@
         .header .search button:hover {
             background: #eab308;
         }
-        .content {
-            display: none;
-            padding: 4rem 2rem;
-            text-align: center;
-            flex: 1 0 auto;
-        }
-        .content.active {
+
+        /* Container for horizontally sliding content */
+        .main-content-wrapper {
             display: flex;
+            flex-grow: 1;
+            width: 100%; /* Will be set dynamically by JS based on pageOrder */
+            transition: transform 0.5s ease-in-out; /* Animasi geser */
+            overflow: hidden; /* Hide content that's not currently in view */
+            height: auto; /* Allow height to adjust */
+        }
+        .main-content-wrapper.hidden {
+            display: none; /* Hide when static content is active */
+        }
+
+        /* Container for static content (no slide animation) */
+        .static-content-wrapper {
+            display: none; /* Hidden by default */
+            flex-grow: 1;
+            width: 100%;
+            height: auto; /* Allow height to adjust */
+            padding: 4rem 0; /* Apply padding here to avoid affecting content width */
+        }
+        .static-content-wrapper.active {
+            display: block; /* Show when active */
+        }
+        .static-content-wrapper .content {
+            display: none; /* Hide all static content by default */
+            width: 100%; /* Ensure static content takes full width */
+            padding: 0 2rem; /* Apply horizontal padding here */
+        }
+        .static-content-wrapper .content.active {
+            display: flex; /* Show active static content */
             flex-direction: column;
         }
+
+        .content {
+            display: flex; /* Keep flex for internal layout */
+            flex-direction: column;
+            flex-shrink: 0; /* Prevents pages from shrinking in main-content-wrapper */
+            width: 100vw; /* Each page in main-content-wrapper takes full viewport width */
+            padding: 4rem 2rem;
+            text-align: center;
+            height: fit-content;
+            min-height: calc(100vh - 120px - 140px); /* Adjust height based on header/footer */
+        }
+
+        /* Specific padding adjustment for recruitment to align with other content */
+        #recruitment.content {
+            padding-top: 0; /* Remove top padding as it's added by static-content-wrapper */
+            padding-bottom: 0; /* Remove bottom padding */
+        }
+
         .hero {
             background: #191919;
             color: white;
@@ -344,7 +348,7 @@
             background: #dc2626;
         }
         .news-detail {
-            padding: 4rem 2rem;
+            padding: 0; /* Remove padding here, handled by static-content-wrapper */
             text-align: center;
             max-width: 800px;
             margin: 0 auto;
@@ -506,8 +510,11 @@
         .admin .logout-btn:hover {
             background: #dc2626;
         }
-        .profile, .community, .recruitment {
+        .profile, .community {
             padding: 4rem 2rem;
+            text-align: center;
+        }
+        .recruitment { /* No padding on this element, parent static-content-wrapper handles it */
             text-align: center;
         }
         .profile h2, .community h2, .recruitment h2 {
@@ -600,6 +607,7 @@
             flex-shrink: 0;
             width: 100%;
             position: relative;
+            z-index: 50; /* Pastikan footer terlihat di atas konten yang digeser */
         }
         .footer .footer-content {
             display: flex;
@@ -713,6 +721,12 @@
             transform: translateY(-3px);
         }
 
+        /* CSS for highlight */
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .header .nav-menu {
                 display: none;
@@ -764,189 +778,194 @@
             </div>
         </div>
         <div class="search">
-            <input type="text" placeholder="Cari Berita...">
-            <button>🔍</button>
+            <input type="text" id="search-input" placeholder="Cari Berita...">
+            <button id="search-button">🔍</button>
         </div>
     </div>
-    <div id="home" class="content active">
-        <div class="hero">
-            <h1>SELALU UPDATE SETIAP SAAT</h1>
-            <p>Fullstate Network adalah platform terpercaya yang menyiarkan berita di Fullstate, memberikan informasi terkini setiap saat.</p>
-            <div class="buttons">
-                <button id="check-news-btn" class="check-btn" onclick="showPage('news-list')">Cek Berita Terbaru</button>
-            </div>
-        </div>
-        <div class="services">
-            <h2>LAYANAN BERITA</h2>
-            <div class="grid">
-                <div class="card">
-                    <img src="Newspaper Icon.png" alt="Berita Menarik">
-                    <h3>BERITA MENARIK</h3>
-                    <p>Akses berita menarik dengan cepat dan mudah.</p>
-                </div>
-                <div class="card">
-                    <img src="Live Camera Icon.png" alt="Live Update">
-                    <h3>LIVE UPDATE</h3>
-                    <p>Dapatkan pembaruan berita langsung dengan proses yang efisien.</p>
-                </div>
-                <div class="card">
-                    <img src="Arsip Berita.png" alt="Arsip Berita">
-                    <h3>ARSIP BERITA</h3>
-                    <p>Akses arsip berita melalui platform digital kami.</p>
+
+    <div class="main-content-wrapper" id="main-content-wrapper">
+        <div id="home" class="content active">
+            <div class="hero">
+                <h1>SELALU UPDATE SETIAP SAAT</h1>
+                <p>Fullstate Network adalah platform terpercaya yang menyiarkan berita di Fullstate, memberikan informasi terkini setiap saat.</p>
+                <div class="buttons">
+                    <button id="check-news-btn" class="check-btn" onclick="showPage('news-list')">Cek Berita Terbaru</button>
                 </div>
             </div>
-        </div>
-        <div class="announcements">
-            <h2>PENGUMUMAN</h2>
-            <div class="grid">
-                <div class="card">
-                    <img src="Pengumuman\Pengumuman1.png" alt="Pengumuman 1">
-                    <p>Untuk saat ini belum ada pengumuman yang diberikan oleh Fullstate Network.</p>
-                </div>
-                <div class="card">
-                    <img src="Pengumuman\Pengumuman2.png" alt="Pengumuman 2">
-                    <p>Untuk saat ini belum ada pengumuman yang diberikan oleh Fullstate Network.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="profile" class="content">
-        <div class="profile">
-            <h2>Profil Fullstate Network</h2>
-            <p>Fullstate Network adalah penyiar berita terkemuka di Fullstate, berkomitmen untuk menyampaikan informasi yang akurat dan terpercaya. Kami telah melayani masyarakat sejak 2022, dengan tim jurnalis berpengalaman yang berdedikasi untuk mengungkap kebenaran.</p>
-            <div class="profile-highlight">
-                <div class="news-item">
-                    <img src="Dir.png" alt="Direktur">
-                    <div class="info">
-                        <span class="category">Direktur</span>
-                        <span class="date"></span>
-                        <h3>Ven Christopher S. Ds, M. Ds</h3>
-                        <p>Direktur Fullstate Network.</p>
-                    </div>
-                </div>
-                <div class="news-item">
-                    <img src="Wadir.png" alt="Wakil Direktur">
-                    <div class="info">
-                        <span class="category">Wakil Direktur</span>
-                        <span class="date"></span>
-                        <h3>H. Armando Jann R. S.T</h3>
-                        <p>Wakil Direktur Fullstate Network.</p>
-                    </div>
-                </div>
-                <div class="news-item">
-                    <img src="Kadir.png" alt="Kepala Direksi">
-                    <div class="info">
-                        <span class="category">Kepala Direksi</span>
-                        <span class="date"></span>
-                        <h3>Bariq Wicaksono</h3>
-                        <p>Kepala Direksi Fullstate Network.</p>
-                    </div>
-                </div>
-                <div class="news-item">
-                    <img src="Wakadir.png" alt="Wakil Kepala Direksi">
-                    <div class="info">
-                        <span class="category">Wakil Kepala Direksi</span>
-                        <span class="date"></span>
-                        <h3>Welly Dj</h3>
-                        <p>Wakil Kepala Direksi Fullstate Network.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="news-list" class="content">
-        <h2>Berita Terkini</h2>
-        <div class="news-items" id="news-items">
-        </div>
-    </div>
-    <div id="community" class="content">
-        <div class="community">
-            <div class="gallery">
-                <h2>Galeri</h2>
-                <div class="grid">
-                    <div class="card"><img src="Galeri\Gambar1.png" alt="Gambar 1"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar2.png" alt="Gambar 2"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar3.png" alt="Gambar 3"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar4.png" alt="Gambar 4"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar5.png" alt="Gambar 5"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar6.png" alt="Gambar 6"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar7.png" alt="Gambar 7"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar8.png" alt="Gambar 8"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                    <div class="card"><img src="Galeri\Gambar9.png" alt="Gambar 9"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
-                </div>
-            </div>
-            <h2>Komunitas Fullstate Network</h2>
-            <p>Bergabunglah dengan komunitas kami untuk berbagi cerita, diskusi, dan informasi. Fullstate Network mendukung komunitas yang aktif dan terhubung, tempat Anda bisa berpartisipasi dalam berbagai kegiatan sosial dan jurnalisme warga.</p>
-            <div class="community-buttons">
-                <a href="https://discord.gg/UMcvyaMn6s" class="button discord-btn" target="_blank">Discord Fullstate Network</a>
-                <a href="https://discord.gg/kotafullstate" class="button discord-btn" target="_blank">Discord Kota Fullstate</a>
-                <a href="https://www.roblox.com/games/93242192529674/KOTA-FULLSTATE" class="button roblox-btn" target="_blank">Kota Fullstate</a>
-            </div>
-        </div>
-    </div>
-    <div id="admin" class="content">
-        <div class="admin">
-            <h2>Panel Admin</h2>
-            <div class="add-news">
-                <button onclick="toggleAddNewsForm()">Tambah Berita</button>
-                <form id="add-news-form" style="display: none;">
-                    <select name="category" id="news-category" required>
-                        <option value="" disabled selected>Pilih Kategori</option>
-                        <option value="accident">Kecelakaan</option>
-                        <option value="politic">Politik</option>
-                        <option value="sport">Olahraga</option>
-                        <option value="art">Seni</option>
-                        <option value="information">Informasi</option>
-                        <option value="fight">Perang/Pertempuran</option>
-                        <option value="traffic">Lalu Lintas</option>
-                        <option value="other">Lainnya</option>
-                    </select>
-                    <input type="text" id="news-title" placeholder="Judul Berita" required>
-                    <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
-                    <input type="text" id="news-image-url" placeholder="Masukkan Direct Link dari Imgbox atau Imgur (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg atau https://i.imgur.com/abcd123.jpg)" required>
-                    <p>Cara mendapatkan Direct Link:<br>
-                    <strong>Imgbox:</strong><br>
-                    1. Buka situs Imgbox (cari "Imgbox image hosting" di mesin pencari).<br>
-                    2. Klik "Upload" dan pilih gambar dari perangkat Anda (maksimal 10 MB).<br>
-                    3. Setelah selesai, salin "Direct Link" (biasanya berakhiran .jpg atau .png).<br>
-                    <strong>Imgur:</strong><br>
-                    1. Buka situs Imgur (cari "Imgur image hosting" di mesin pencari).<br>
-                    2. Klik "New Post" atau "Upload" dan pilih gambar dari perangkat Anda.<br>
-                    3. Setelah diunggah, klik kanan pada gambar dan pilih "Copy Image Address" atau salin link langsung (biasanya berakhiran .jpg atau .png).<br>
-                    4. Tempelkan tautan tersebut di kolom ini.</p>
-                    <button type="submit">Kirim Berita</button>
-                </form>
-            </div>
-            <div class="news-list" id="admin-news-list">
-            </div>
-            <button class="logout-btn" onclick="logout()">Logout</button>
-        </div>
-    </div>
-    <div id="recruitment" class="content">
-        <div class="recruitment">
-            <h2>Rekrutmen Fullstate Network</h2>
-            <p>Bergabunglah dengan tim kami di Fullstate Network! Kami sedang mencari individu yang bersemangat dan berdedikasi untuk menjadi bagian dari penyiar berita terkemuka di Kota Fullstate. Lihat posisi yang tersedia di bawah ini dan cek jadwal interviewnya.</p>
-            <div class="job-listings">
-                <h3>Posisi yang Tersedia</h3>
+            <div class="services">
+                <h2>LAYANAN BERITA</h2>
                 <div class="grid">
                     <div class="card">
-                        <h3>Reporter Lapangan</h3>
-                        <p>Kami mencari reporter yang dapat mengambil gambar di lapangan dengan kualitas tinggi dan mudah diketahui.</p>
+                        <img src="Newspaper Icon.png" alt="Berita Menarik">
+                        <h3>BERITA MENARIK</h3>
+                        <p>Akses berita menarik dengan cepat dan mudah.</p>
                     </div>
                     <div class="card">
-                        <h3>None</h3>
-                        <p>Belum ada posisi lain yang ditentukan oleh Direktur Fullstate Network.</p>
+                        <img src="Live Camera Icon.png" alt="Live Update">
+                        <h3>LIVE UPDATE</h3>
+                        <h3>Dapatkan pembaruan berita langsung dengan proses yang efisien.</p>
                     </div>
                     <div class="card">
-                        <h3>None</h3>
-                        <p>Belum ada posisi lain yang ditentukan oleh Direktur Fullstate Network.</p>
+                        <img src="Arsip Berita.png" alt="Arsip Berita">
+                        <h3>ARSIP BERITA</h3>
+                        <p>Akses arsip berita melalui platform digital kami.</p>
                     </div>
                 </div>
             </div>
-            <p>Untuk mendaftar silakan cek <a href="https://discord.gg/F3VncWG53t">Informasi Pendaftaran</a> dan tunggu <a href="https://discord.gg/cUxBMkB9Uc">Hasil Kelulusan</a> anda.</p>
+            <div class="announcements">
+                <h2>PENGUMUMAN</h2>
+                <div class="grid">
+                    <div class="card">
+                        <img src="Pengumuman\Pengumuman1.png" alt="Pengumuman 1">
+                        <p>Untuk saat ini belum ada pengumuman yang diberikan oleh Fullstate Network.</p>
+                    </div>
+                    <div class="card">
+                        <img src="Pengumuman\Pengumuman2.png" alt="Pengumuman 2">
+                        <p>Untuk saat ini belum ada pengumuman yang diberikan oleh Fullstate Network.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    <div id="login-modal">
+        <div id="profile" class="content">
+            <div class="profile">
+                <h2>Profil Fullstate Network</h2>
+                <p>Fullstate Network adalah penyiar berita terkemuka di Fullstate, berkomitmen untuk menyampaikan informasi yang akurat dan terpercaya. Kami telah melayani masyarakat sejak 2022, dengan tim jurnalis berpengalaman yang berdedikasi untuk mengungkap kebenaran.</p>
+                <div class="profile-highlight">
+                    <div class="news-item">
+                        <img src="Dir.png" alt="Direktur">
+                        <div class="info">
+                            <span class="category">Direktur</span>
+                            <span class="date"></span>
+                            <h3>Ven Christopher S. Ds, M. Ds</h3>
+                            <p>Direktur Fullstate Network.</p>
+                        </div>
+                    </div>
+                    <div class="news-item">
+                        <img src="Wadir.png" alt="Wakil Direktur">
+                        <div class="info">
+                            <span class="category">Wakil Direktur</span>
+                            <span class="date"></span>
+                            <h3>H. Armando Jann R. S.T</h3>
+                            <p>Wakil Direktur Fullstate Network.</p>
+                        </div>
+                    </div>
+                    <div class="news-item">
+                        <img src="Kadir.png" alt="Kepala Direksi">
+                        <div class="info">
+                            <span class="category">Kepala Direksi</span>
+                            <span class="date"></span>
+                            <h3>Bariq Wicaksono</h3>
+                            <p>Kepala Direksi Fullstate Network.</p>
+                        </div>
+                    </div>
+                    <div class="news-item">
+                        <img src="Wakadir.png" alt="Wakil Kepala Direksi">
+                        <div class="info">
+                            <span class="category">Wakil Kepala Direksi</span>
+                            <span class="date"></span>
+                            <h3>Welly Dj</h3>
+                            <p>Wakil Kepala Direksi Fullstate Network.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="news-list" class="content">
+            <h2>Berita Terkini</h2>
+            <div class="news-items" id="news-items">
+            </div>
+        </div>
+        <div id="community" class="content">
+            <div class="community">
+                <div class="gallery">
+                    <h2>Galeri</h2>
+                    <div class="grid">
+                        <div class="card"><img src="Galeri\Gambar1.png" alt="Gambar 1"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar2.png" alt="Gambar 2"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar3.png" alt="Gambar 3"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar4.png" alt="Gambar 4"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar5.png" alt="Gambar 5"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar6.png" alt="Gambar 6"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar7.png" alt="Gambar 7"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar8.png" alt="Gambar 8"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                        <div class="card"><img src="Galeri\Gambar9.png" alt="Gambar 9"><p>Untuk saat ini belum ada gambar yang ditampilkan di galeri kami.</p></div>
+                    </div>
+                </div>
+                <h2>Komunitas Fullstate Network</h2>
+                <p>Bergabunglah dengan komunitas kami untuk berbagi cerita, diskusi, dan informasi. Fullstate Network mendukung komunitas yang aktif dan terhubung, tempat Anda bisa berpartisipasi dalam berbagai kegiatan sosial dan jurnalisme warga.</p>
+                <div class="community-buttons">
+                    <a href="https://discord.gg/UMcvyaMn6s" class="button discord-btn" target="_blank">Discord Fullstate Network</a>
+                    <a href="https://discord.gg/kotafullstate" class="button discord-btn" target="_blank">Discord Kota Fullstate</a>
+                    <a href="https://www.roblox.com/games/93242192529674/KOTA-FULLSTATE" class="button roblox-btn" target="_blank">Kota Fullstate</a>
+                </div>
+            </div>
+        </div>
+        <div id="admin" class="content">
+            <div class="admin">
+                <h2>Panel Admin</h2>
+                <div class="add-news">
+                    <button onclick="toggleAddNewsForm()">Tambah Berita</button>
+                    <form id="add-news-form" style="display: none;">
+                        <select name="category" id="news-category" required>
+                            <option value="" disabled selected>Pilih Kategori</option>
+                            <option value="accident">Kecelakaan</option>
+                            <option value="politic">Politik</option>
+                            <option value="sport">Olahraga</option>
+                            <option value="art">Seni</option>
+                            <option value="information">Informasi</option>
+                            <option value="fight">Perang/Pertempuran</option>
+                            <option value="traffic">Lalu Lintas</option>
+                            <option value="other">Lainnya</option>
+                        </select>
+                        <input type="text" id="news-title" placeholder="Judul Berita" required>
+                        <textarea id="news-content" placeholder="Isi Berita" rows="4" required></textarea>
+                        <input type="text" id="news-image-url" placeholder="Masukkan Direct Link dari Imgbox atau Imgur (contoh: https://thumbs2.imgbox.com/ab/cd/efgh1234_t.jpg atau https://i.imgur.com/abcd123.jpg)" required>
+                        <p>Cara mendapatkan Direct Link:<br>
+                        <strong>Imgbox:</strong><br>
+                        1. Buka situs Imgbox (cari "Imgbox image hosting" di mesin pencari).<br>
+                        2. Klik "Upload" dan pilih gambar dari perangkat Anda (maksimal 10 MB).<br>
+                        3. Setelah selesai, salin "Direct Link" (biasanya berakhiran .jpg atau .png).<br>
+                        <strong>Imgur:</strong><br>
+                        1. Buka situs Imgur (cari "Imgur image hosting" di mesin pencari).<br>
+                        2. Klik "New Post" atau "Upload" dan pilih gambar dari perangkat Anda.<br>
+                        3. Setelah diunggah, klik kanan pada gambar dan pilih "Copy Image Address" atau salin link langsung (biasanya berakhiran .jpg atau .png).<br>
+                        4. Tempelkan tautan tersebut di kolom ini.</p>
+                        <button type="submit">Kirim Berita</button>
+                    </form>
+                </div>
+                <div class="news-list" id="admin-news-list">
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div> <div class="static-content-wrapper" id="static-content-wrapper">
+        <div id="recruitment" class="content">
+            <div class="recruitment">
+                <h2>Rekrutmen Fullstate Network</h2>
+                <p>Bergabunglah dengan tim kami di Fullstate Network! Kami sedang mencari individu yang bersemangat dan berdedikasi untuk menjadi bagian dari penyiar berita terkemuka di Kota Fullstate. Lihat posisi yang tersedia di bawah ini dan cek jadwal interviewnya.</p>
+                <div class="job-listings">
+                    <h3>Posisi yang Tersedia</h3>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Reporter Lapangan</h3>
+                            <p>Kami mencari reporter yang dapat mengambil gambar di lapangan dengan kualitas tinggi dan mudah diketahui.</p>
+                        </div>
+                        <div class="card">
+                            <h3>None</h3>
+                            <p>Belum ada posisi lain yang ditentukan oleh Direktur Fullstate Network.</p>
+                        </div>
+                        <div class="card">
+                            <h3>None</h3>
+                            <p>Belum ada posisi lain yang ditentukan oleh Direktur Fullstate Network.</p>
+                        </div>
+                    </div>
+                </div>
+                <p>Untuk mendaftar silakan cek <a href="https://discord.gg/F3VncWG53t">Informasi Pendaftaran</a> dan tunggu <a href="https://discord.gg/cUxBMkB9Uc">Hasil Kelulusan</a> anda.</p>
+            </div>
+        </div>
+        <div id="news-detail-container" class="content">
+            </div>
+    </div> <div id="login-modal">
         <div class="login-content">
             <h3>Login Admin</h3>
             <input type="text" id="username" placeholder="Username">
@@ -1000,9 +1019,15 @@
             db = firebase.firestore();
         } catch (error) {
             alert("Gagal menginisialisasi Firebase. Fitur berita mungkin tidak berfungsi, tetapi navigasi tetap dapat digunakan.");
+            console.error("Firebase initialization error:", error);
         }
         let isLoggedIn = false;
-        let newsData = [];
+        let newsData = []; // Ini akan menyimpan semua data berita
+        const mainNavPages = ['home', 'profile', 'news-list', 'community', 'admin']; // Pages with slide animation
+        const staticPages = ['recruitment']; // Pages without slide animation
+        let currentPageType = 'main'; // 'main' or 'static'
+        let currentStaticPageId = null; // To keep track of which static page is active
+
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
             isLoggedIn = true;
         }
@@ -1019,100 +1044,154 @@
         function getTranslatedCategory(category) {
             return categoryTranslations[category.toLowerCase()] || category.charAt(0).toUpperCase() + category.slice(1);
         }
+
+        // Fungsi bantu untuk menyorot teks
+        function highlightText(text, searchTerm) {
+            if (!searchTerm) return text; // Jika tidak ada search term, kembalikan teks asli
+            // Escape karakter khusus dalam searchTerm untuk digunakan dalam regex
+            const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedSearchTerm})`, 'gi'); // 'gi' untuk global dan case-insensitive
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
         function showPage(pageId) {
+            const mainContentWrapper = document.getElementById('main-content-wrapper');
+            const staticContentWrapper = document.getElementById('static-content-wrapper');
+            if (!mainContentWrapper || !staticContentWrapper) {
+                console.error("Salah satu wrapper konten tidak ditemukan.");
+                return;
+            }
+
+            // Hide all content sections first
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
-            const contentSection = document.getElementById(pageId);
-            if (contentSection) {
-                contentSection.classList.add('active');
-            } else {
-                if (newsData.find(news => news.id === pageId)) {
-                    showNewsDetail(pageId);
+            mainContentWrapper.classList.remove('hidden');
+            staticContentWrapper.classList.remove('active');
+
+            // --- Handle Main Navigation Pages (with slide animation) ---
+            if (mainNavPages.includes(pageId)) {
+                if (pageId === 'admin' && !isLoggedIn) {
+                    alert('Silakan login sebagai admin untuk mengakses panel ini.');
+                    showPage('home');
+                    return;
+                }
+
+                currentPageType = 'main';
+                let targetPageIndex = mainNavPages.indexOf(pageId);
+                mainContentWrapper.style.transform = `translateX(${-targetPageIndex * 100}vw)`;
+                document.getElementById(pageId).classList.add('active'); // This 'active' is for content internal display logic, not for show/hide.
+
+                // Update active navigation link in header
+                document.querySelectorAll('.nav a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                const navLinks = document.querySelectorAll('.nav a');
+                navLinks.forEach(link => {
+                    const onclickAttr = link.getAttribute('onclick');
+                    if (onclickAttr && onclickAttr.includes(`showPage('${pageId}')`)) {
+                        link.classList.add('active');
+                    }
+                });
+
+                if (pageId === 'admin') {
+                    const addNewsSection = document.querySelector('#admin .add-news');
+                    if (addNewsSection) {
+                        addNewsSection.classList.add('active');
+                        if (db) loadAdminNewsList();
+                    } else {
+                        console.error("Elemen '.add-news' tidak ditemukan di halaman admin.");
+                    }
                 } else {
-                    showPage('news-list');
+                    const addNewsForm = document.getElementById('add-news-form');
+                    if (addNewsForm) {
+                        addNewsForm.style.display = 'none';
+                    }
                 }
-                return;
-            }
-            document.querySelectorAll('.nav a').forEach(link => {
-                link.classList.remove('active');
-            });
-            const navLinks = document.querySelectorAll('.nav a');
-            let foundLink = false;
-            navLinks.forEach(link => {
-                const onclickAttr = link.getAttribute('onclick');
-                if (onclickAttr && onclickAttr.includes(`showPage('${pageId}')`)) {
-                    link.classList.add('active');
-                    foundLink = true;
+                if (pageId === 'news-list' && db) {
+                    // Saat masuk halaman news-list, pastikan input pencarian di-reset
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput) searchInput.value = '';
+                    loadNews(); // Panggil loadNews yang akan merender semua berita
                 }
-            });
-            if (!foundLink) {
+
             }
-            const checkNewsBtn = document.getElementById('check-news-btn');
-            if (checkNewsBtn && pageId === 'news-list' && sessionStorage.getItem('fromOtherPage') === 'true') {
-                checkNewsBtn.textContent = 'Kembali';
-                checkNewsBtn.onclick = () => showPage('home');
-                sessionStorage.removeItem('fromOtherPage');
-            } else if (checkNewsBtn && pageId === 'home') {
-                checkNewsBtn.textContent = 'Cek Berita Terbaru';
-                checkNewsBtn.onclick = () => {
-                    sessionStorage.setItem('fromOtherPage', 'true');
-                    showPage('news-list');
-                };
+            // --- Handle Static Pages (no slide animation) ---
+            else if (staticPages.includes(pageId)) {
+                currentPageType = 'static';
+                mainContentWrapper.classList.add('hidden'); // Hide main content
+                staticContentWrapper.classList.add('active'); // Show static content wrapper
+                document.getElementById(pageId).classList.add('active'); // Show specific static page
+
+                currentStaticPageId = pageId; // Keep track of the currently active static page
+
+                // No active link update in header for static pages
+                document.querySelectorAll('.nav a').forEach(link => {
+                    link.classList.remove('active');
+                });
             }
-            if (pageId === 'admin' && !isLoggedIn) {
-                alert('Silakan login sebagai admin untuk mengakses panel ini.');
-                showPage('home');
-                return;
-            }
-            if (isLoggedIn && pageId === 'admin') {
-                const addNewsSection = document.querySelector('#admin .add-news');
-                if (addNewsSection) {
-                    addNewsSection.classList.add('active');
-                    if (db) loadAdminNewsList();
-                } else {
+            // --- Handle News Detail Page (also static) ---
+            else if (pageId.startsWith('news-detail-')) { // Assuming news detail IDs will be news-detail-XYZ
+                currentPageType = 'static';
+                mainContentWrapper.classList.add('hidden');
+                staticContentWrapper.classList.add('active');
+
+                const news = newsData.find(n => n.id === pageId.replace('news-detail-', ''));
+                if (!news) {
+                    showPage('news-list'); // Fallback if news not found
+                    return;
                 }
-            }
-            if (pageId === 'news-list' && db) {
-                loadNews();
-            }
-            updateNavigation();
-            updateDeleteButtonsVisibility();
-            if (window.innerWidth <= 768) {
-                toggleMenu();
-            }
-        }
-        function showNewsDetail(newsId) {
-            const news = newsData.find(n => n.id === newsId);
-            if (!news) {
-                showPage('news-list');
-                return;
-            }
-            let newsDetail = document.getElementById(newsId);
-            if (!newsDetail) {
-                newsDetail = document.createElement('div');
-                newsDetail.id = newsId;
-                newsDetail.className = 'content';
-                newsDetail.innerHTML = `
+
+                let newsDetailDiv = document.getElementById('news-detail-container');
+                if (!newsDetailDiv) {
+                    console.error("Elemen 'news-detail-container' tidak ditemukan.");
+                    return;
+                }
+
+                // Dapatkan search term yang terakhir digunakan (jika ada)
+                const lastSearchInput = document.getElementById('search-input');
+                const lastSearchTerm = lastSearchInput ? lastSearchInput.value.toLowerCase().trim() : '';
+
+                // Sorot judul dan konten penuh di halaman detail
+                const highlightedDetailTitle = highlightText(news.title, lastSearchTerm);
+                const highlightedDetailContent = highlightText(news.content, lastSearchTerm);
+
+                newsDetailDiv.innerHTML = `
                     <div class="news-detail">
                         <img src="${news.image}" alt="${getTranslatedCategory(news.category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x300?text=${getTranslatedCategory(news.category)}';">
-                        <h3>${news.title}</h3>
-                        <p>${news.content}</p>
-                        <div class="button-group">
+                        <h3>${highlightedDetailTitle}</h3> <p>${highlightedDetailContent}</p> <div class="button-group">
                             <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
                             <button class="delete-btn" onclick="deleteNews('${news.id}')">Hapus Berita</button>
                         </div>
                     </div>
                 `;
-                document.body.appendChild(newsDetail);
+                newsDetailDiv.classList.add('active');
+                newsDetailDiv.dataset.currentNewsId = news.id;
+                currentStaticPageId = 'news-detail-container';
+
+                // No active link update in header for news detail
+                document.querySelectorAll('.nav a').forEach(link => {
+                    link.classList.remove('active');
+                });
+            } else {
+                console.warn(`Halaman dengan ID '${pageId}' tidak dikenali.`);
+                showPage('home'); // Fallback to home
             }
-            showPage(newsId);
+
+            updateNavigation(); // Update admin link visibility in nav
+            updateDeleteButtonsVisibility(); // Update delete buttons visibility
+
+            if (window.innerWidth <= 768) {
+                toggleMenu(); // Close mobile menu after selection
+            }
         }
+
         function showLoginModal() {
             const modal = document.getElementById('login-modal');
             if (modal) {
                 modal.classList.add('active');
             } else {
+                console.error("Elemen modal login tidak ditemukan.");
             }
         }
         function closeLoginModal() {
@@ -1124,6 +1203,7 @@
                 if (usernameInput) usernameInput.value = '';
                 if (passwordInput) passwordInput.value = '';
             } else {
+                console.error("Elemen modal login tidak ditemukan.");
             }
         }
         function login() {
@@ -1154,6 +1234,7 @@
                     form.style.display = 'none';
                 }
             } else {
+                console.error("Form 'add-news-form' tidak ditemukan.");
             }
         }
         function formatDateTime() {
@@ -1202,96 +1283,102 @@
                 const docRef = await db.collection('news').add(newNews);
                 const newNewsId = docRef.id;
                 await docRef.update({ id: newNewsId });
-                const newsItems = document.getElementById('news-items');
-                if (newsItems) {
-                    const newNewsItem = document.createElement('div');
-                    newNewsItem.className = 'news-item';
-                    newNewsItem.onclick = () => showNewsDetail(newNewsId);
-                    newNewsItem.innerHTML = `
-                        <img src="${imageUrl}" alt="${getTranslatedCategory(category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/24?text=${getTranslatedCategory(news.category)}';">
-                        <div class="info">
-                            <span class="category">${getTranslatedCategory(category)}</span>
-                            <span class="date">${dateTime}</span>
-                            <h3>${title}</h3>
-                            <p>${content.substring(0, 50)}...</p>
-                        </div>
-                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${newNewsId}')">Hapus Berita</button>
-                    `;
-                    newsItems.insertBefore(newNewsItem, newsItems.firstChild);
-                    document.getElementById('add-news-form').reset();
-                    toggleAddNewsForm();
-                    alert('Berita berhasil ditambahkan!');
-                    showPage('news-list');
-                    if (db) loadAdminNewsList();
-                    updateDeleteButtonsVisibility();
-                } else {
+                
+                if (db) {
+                    loadNews(); // Muat ulang berita untuk user
+                    loadAdminNewsList(); // Muat ulang berita untuk admin panel
                 }
+                alert('Berita berhasil ditambahkan!');
+                document.getElementById('add-news-form').reset();
+                toggleAddNewsForm();
+                showPage('news-list'); // Arahkan ke halaman berita setelah tambah
+                updateDeleteButtonsVisibility();
             } catch (error) {
                 alert('Gagal menambahkan berita. Silakan coba lagi.');
+                console.error("Error adding news:", error);
             }
         }
-        async function loadNews() {
-            if (!db) {
+
+        // Fungsi bantu untuk merender daftar berita (baik semua atau yang difilter)
+        function renderNewsList(newsToRender, currentSearchTerm = '') { // Tambahkan parameter currentSearchTerm
+            const newsItemsContainer = document.getElementById('news-items');
+            if (!newsItemsContainer) return; // Kembali jika container tidak ditemukan
+
+            newsItemsContainer.innerHTML = ''; // Kosongkan sebelum mengisi ulang
+
+            if (newsToRender.length === 0) {
+                newsItemsContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 2rem;">Tidak ada berita yang cocok dengan pencarian Anda.</p>';
                 return;
             }
-            const newsItems = document.getElementById('news-items');
-            if (!newsItems) {
+
+            newsToRender.forEach(news => {
+                const newNewsItem = document.createElement('div');
+                newNewsItem.className = 'news-item';
+                // Pass full news ID to showNewsDetail
+                newNewsItem.onclick = () => showPage(`news-detail-${news.id}`);
+
+                // Sorot judul dan sebagian konten
+                const highlightedTitle = highlightText(news.title, currentSearchTerm);
+                const highlightedContentSnippet = highlightText(news.content.substring(0, 50), currentSearchTerm); // Sorot hanya snippet
+
+                newNewsItem.innerHTML = `
+                    <img src="${news.image}" alt="${getTranslatedCategory(news.category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60x60?text=${getTranslatedCategory(news.category)}';">
+                    <div class="info">
+                        <span class="category">${getTranslatedCategory(news.category)}</span>
+                        <span class="date">${news.dateTime}</span>
+                        <h3>${highlightedTitle}</h3> <p>${highlightedContentSnippet}...</p> </div>
+                    <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${news.id}')">Hapus Berita</button>
+                `;
+                newsItemsContainer.appendChild(newNewsItem);
+            });
+            updateDeleteButtonsVisibility(); // Pastikan tombol hapus diperbarui
+        }
+
+        async function loadNews() {
+            if (!db) {
+                console.warn("Firebase Firestore tidak tersedia, tidak dapat memuat berita.");
                 return;
             }
             try {
-                newsItems.innerHTML = '';
+                // Mengambil semua berita dan menyimpannya di newsData
                 const snapshot = await db.collection('news')
                     .orderBy('createdAt', 'desc')
                     .get();
-                newsData = [];
+                newsData = []; // Reset newsData
                 snapshot.forEach(doc => {
                     const news = doc.data();
                     newsData.push(news);
-                    const newNewsItem = document.createElement('div');
-                    newNewsItem.className = 'news-item';
-                    newNewsItem.onclick = () => showNewsDetail(news.id);
-                    newNewsItem.innerHTML = `
-                        <img src="${news.image}" alt="${getTranslatedCategory(news.category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/24?text=${getTranslatedCategory(news.category)}';">
-                        <div class="info">
-                            <span class="category">${getTranslatedCategory(news.category)}</span>
-                            <span class="date">${news.dateTime}</span>
-                            <h3>${news.title}</h3>
-                            <p>${news.content.substring(0, 50)}...</p>
-                        </div>
-                        <button class="delete-btn" onclick="event.stopPropagation(); deleteNews('${news.id}')">Hapus Berita</button>
-                    `;
-                    newsItems.appendChild(newNewsItem);
-                    let newsDetail = document.getElementById(news.id);
-                    if (!newsDetail) {
-                        newsDetail = document.createElement('div');
-                        newsDetail.id = news.id;
-                        newsDetail.className = 'content';
-                        newsDetail.innerHTML = `
-                            <div class="news-detail">
-                                <img src="${news.image}" alt="${getTranslatedCategory(news.category)}" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x300?text=${getTranslatedCategory(news.category)}';">
-                                <h3>${news.title}</h3>
-                                <p>${news.content}</p>
-                                <div class="button-group">
-                                    <a class="back-btn" onclick="showPage('news-list')">Kembali</a>
-                                    <button class="delete-btn" onclick="deleteNews('${news.id}')">Hapus Berita</button>
-                                </div>
-                            </div>
-                        `;
-                        document.body.appendChild(newsDetail);
-                    }
                 });
-                updateDeleteButtonsVisibility();
+                renderNewsList(newsData, ''); // Panggil renderNewsList dengan searchTerm kosong
             } catch (error) {
                 alert('Gagal memuat berita. Periksa konsol untuk detail lebih lanjut.');
+                console.error("Error loading news:", error);
             }
         }
+
+        function searchNews() {
+            const searchTerm = document.getElementById('search-input')?.value.toLowerCase().trim();
+
+            if (searchTerm === '') {
+                renderNewsList(newsData, ''); // Jika kosong, tidak ada highlight
+            } else {
+                const filteredNews = newsData.filter(news =>
+                    news.title.toLowerCase().includes(searchTerm) ||
+                    getTranslatedCategory(news.category).toLowerCase().includes(searchTerm)
+                );
+                renderNewsList(filteredNews, searchTerm); // Teruskan searchTerm
+            }
+        }
+
         async function loadAdminNewsList() {
             if (!db) {
+                console.warn("Firebase Firestore tidak tersedia, tidak dapat memuat daftar berita admin.");
                 return;
             }
             try {
                 const adminNewsList = document.getElementById('admin-news-list');
                 if (!adminNewsList) {
+                    console.error("Elemen 'admin-news-list' tidak ditemukan.");
                     return;
                 }
                 adminNewsList.innerHTML = '';
@@ -1314,6 +1401,7 @@
                     adminNewsList.appendChild(newsItem);
                 });
             } catch (error) {
+                console.error("Error loading admin news list:", error);
             }
         }
         async function deleteNews(newsId) {
@@ -1324,17 +1412,39 @@
             if (confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
                 try {
                     await db.collection('news').doc(newsId).delete();
-                    const newsItem = document.querySelector(`#news-items .news-item[onclick="showNewsDetail('${newsId}')"]`);
-                    if (newsItem) newsItem.remove();
-                    const newsPage = document.getElementById(newsId);
-                    if (newsPage) newsPage.remove();
+                    
+                    // Remove from newsData array
                     newsData = newsData.filter(n => n.id !== newsId);
-                    if (db) loadAdminNewsList();
-                    if (db) loadNews();
+
+                    // If currently on a news detail page of the deleted news, redirect
+                    const newsDetailDiv = document.getElementById('news-detail-container');
+                    if (newsDetailDiv && newsDetailDiv.dataset.currentNewsId === newsId) {
+                        showPage('news-list'); // Go back to news list
+                    }
+                    
+                    if (db) {
+                        loadAdminNewsList();
+                        loadNews(); // Muat ulang berita untuk user
+                    }
+                    
                     alert('Berita berhasil dihapus!');
-                    showPage('news-list');
+                    // Ensure the current page is re-rendered correctly
+                    // Logika ini mungkin tidak perlu jika showPage('news-list') sudah dipanggil
+                    // Namun, kita tetap memastikan halaman ditampilkan dengan benar
+                    if (currentPageType === 'main') {
+                         const currentActiveNavLink = document.querySelector('.nav a.active');
+                         if (currentActiveNavLink) {
+                             const activePageId = currentActiveNavLink.getAttribute('onclick').match(/'(.*?)'/)[1];
+                             showPage(activePageId);
+                         } else {
+                             showPage('home'); // Fallback jika tidak ada link aktif
+                         }
+                    } else { // If on a static page, refresh the content
+                        showPage(currentStaticPageId || 'home'); // Go to current static page or home
+                    }
                 } catch (error) {
                     alert('Gagal menghapus berita. Silakan coba lagi.');
+                    console.error("Error deleting news:", error);
                 }
             }
         }
@@ -1349,22 +1459,37 @@
             });
         }
         function updateNavigation() {
-            const nav = document.getElementById('nav-links');
-            if (!nav) {
+            const navMenu = document.getElementById('nav-menu');
+            if (!navMenu) {
+                console.error("Elemen 'nav-menu' tidak ditemukan untuk memperbarui navigasi.");
                 return;
             }
-            const existingAdminLink = nav.querySelector('a[onclick="showPage(\'admin\')"]');
+            const existingAdminLink = navMenu.querySelector('a[onclick="showPage(\'admin\')"]');
             if (isLoggedIn) {
                 if (!existingAdminLink) {
                     const adminLink = document.createElement('a');
                     adminLink.textContent = 'Admin';
                     adminLink.setAttribute('onclick', "showPage('admin')");
-                    nav.appendChild(adminLink);
+                    navMenu.appendChild(adminLink);
+                    // Ensure 'admin' is in mainNavPages if not already
+                    if (!mainNavPages.includes('admin')) {
+                        mainNavPages.push('admin'); // Or insert at specific index
+                    }
                 }
             } else {
                 if (existingAdminLink) {
-                    nav.removeChild(existingAdminLink);
+                    navMenu.removeChild(existingAdminLink);
+                    // Remove 'admin' from mainNavPages
+                    const indexToRemove = mainNavPages.indexOf('admin');
+                    if (indexToRemove > -1) {
+                        mainNavPages.splice(indexToRemove, 1);
+                    }
                 }
+            }
+             // Dynamically set the width of main-content-wrapper based on mainNavPages length
+            const mainContentWrapper = document.getElementById('main-content-wrapper');
+            if (mainContentWrapper) {
+                mainContentWrapper.style.width = `${mainNavPages.length * 100}vw`;
             }
         }
         function logout() {
@@ -1380,22 +1505,68 @@
             if (navMenu) {
                 navMenu.classList.toggle('active');
             } else {
+                console.error("Elemen 'nav-menu' tidak ditemukan untuk mengalihkan menu.");
             }
         }
+
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('add-news-form');
             if (form) {
                 form.addEventListener('submit', addNews);
             } else {
+                console.error("Form 'add-news-form' tidak ditemukan.");
             }
-            showPage('home');
+            
+            showPage('home'); // Initial page load
             if (db) {
-                loadNews();
+                loadNews(); // Load news when the page loads
             } else {
+                console.warn("Firebase Firestore tidak diinisialisasi, berita tidak akan dimuat.");
             }
-            updateNavigation();
+            updateNavigation(); // Update navigation on load
+
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+
+            if (searchInput && searchButton) {
+                // Ketika tombol cari diklik
+                searchButton.addEventListener('click', () => {
+                    // Jika kita tidak di halaman berita, pindah dulu ke halaman berita
+                    if (document.querySelector('.main-content-wrapper .content.active')?.id !== 'news-list') {
+                        showPage('news-list');
+                        // Berikan sedikit delay untuk memastikan transisi selesai sebelum pencarian
+                        setTimeout(searchNews, 550); // Sesuaikan delay dengan transisi CSS (0.5s + sedikit lebih)
+                    } else {
+                        searchNews();
+                    }
+                });
+
+                // Ketika Enter ditekan di kolom pencarian
+                searchInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault(); // Mencegah form submit default jika ada
+                        if (document.querySelector('.main-content-wrapper .content.active')?.id !== 'news-list') {
+                            showPage('news-list');
+                            setTimeout(searchNews, 550);
+                        } else {
+                            searchNews();
+                        }
+                    }
+                });
+                
+                // Tambahkan event listener untuk menghapus pencarian saat input dikosongkan
+                searchInput.addEventListener('input', () => {
+                    if (searchInput.value.trim() === '') {
+                        searchNews(); // Panggil fungsi pencarian untuk mereset tampilan
+                    }
+                });
+
+            } else {
+                console.error("Elemen pencarian tidak ditemukan.");
+            }
         });
         window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Terjadi kesalahan pada skrip:', message, 'at', source, 'line', lineno, 'col', colno, 'Error object:', error);
             alert('Terjadi kesalahan pada skrip. Silakan periksa konsol browser untuk detail lebih lanjut.');
         };
     </script>
